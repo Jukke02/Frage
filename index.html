@@ -509,13 +509,15 @@
       opacity: 0.8;
       margin-top: 4px;
     }
+
+    /* ===== MOBILNÍ OVLÁDÁNÍ – DPAD + TLAČÍTKO E ===== */
     .mobile-controls {
       position: absolute;
       bottom: 20px;
       left: 0;
       right: 0;
       padding: 0 20px;
-      display: none; /* defaultně skryté, ukážeme jen na menších displejích */
+      display: none; /* zobrazíme jen na menších displejích */
       justify-content: space-between;
       align-items: flex-end;
       z-index: 20;
@@ -524,7 +526,7 @@
 
     .mobile-dpad,
     .mobile-action-wrapper {
-      pointer-events: auto; /* ale vnitřní prvky jsou klikatelné */
+      pointer-events: auto; /* vnitřní prvky jsou klikatelné */
     }
 
     .mobile-dpad {
@@ -574,7 +576,6 @@
         display: flex;
       }
     }
-
   </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
@@ -601,6 +602,8 @@
      🎮 WASD / Šipky: Pohyb | E: Sebrat fragment (když jste blízko)
     </div>
    </div>
+
+   <!-- MOBILNÍ OVLÁDÁNÍ -->
    <div class="mobile-controls">
      <div class="mobile-dpad">
        <div></div>
@@ -1123,10 +1126,8 @@
       document.addEventListener('keydown', handleKeyDown);
       document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
+      // napojení mobilního ovládání
       setupMobileControls();
-
-      showWelcomeModal();
-      gameLoop();
 
       showWelcomeModal();
       gameLoop();
@@ -2624,6 +2625,7 @@
       }
     }
 
+    // ===== MOBILNÍ OVLÁDÁNÍ – LOGIKA =====
     function setupMobileControls() {
       const dirButtons = document.querySelectorAll('.mobile-btn[data-dir]');
       const actionBtn = document.getElementById('mobileAction');
@@ -2643,17 +2645,17 @@
         };
 
         // touch
-        btn.addEventListener('touchstart', start);
+        btn.addEventListener('touchstart', start, { passive: false });
         btn.addEventListener('touchend', end);
         btn.addEventListener('touchcancel', end);
 
-        // pro případ testování na PC myší
+        // myš – kvůli testování v prohlížeči
         btn.addEventListener('mousedown', start);
         btn.addEventListener('mouseup', end);
         btn.addEventListener('mouseleave', end);
       });
 
-      // Tlačítko E – sebrání fragmentu (stejná logika jako v handleKeyDown pro klávesu E)
+      // Tlačítko E – sebrání fragmentu
       if (actionBtn) {
         const triggerAction = (e) => {
           e.preventDefault();
@@ -2665,8 +2667,8 @@
           }
         };
 
+        // stačí click – funguje i na mobilu
         actionBtn.addEventListener('click', triggerAction);
-        actionBtn.addEventListener('touchstart', triggerAction);
       }
     }
 
