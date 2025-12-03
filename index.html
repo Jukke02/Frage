@@ -1,0 +1,2733 @@
+<!doctype html>
+<html lang="cs">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fragmenty Budoucnosti 2125</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    html {
+      height: 100%;
+    }
+    
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0a0a15 0%, #1a1a2e 100%);
+    }
+
+    .game-wrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+      color: #00ff88;
+      font-size: 16px;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .hud-left {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hud-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .fragment-counter {
+      background: rgba(0, 255, 136, 0.15);
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: 2px solid #00ff88;
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      padding: 15px 30px;
+      border-radius: 8px;
+      border: 2px solid #00ff88;
+      color: #00ff88;
+      font-size: 14px;
+      z-index: 10;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+    }
+
+    /* BOČNÍ PANEL S MINIHRAMI */
+    .side-panel {
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 15;
+    }
+
+    .side-btn {
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #00ff88;
+      color: #00ff88;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      text-align: left;
+      transition: all 0.3s ease;
+      min-width: 180px;
+    }
+
+    .side-btn:hover {
+      background: #00ff88;
+      color: #0a0a15;
+      box-shadow: 0 0 18px rgba(0, 255, 136, 0.7);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+      .side-panel {
+        top: auto;
+        bottom: 95px;
+        right: 10px;
+        transform: none;
+      }
+    }
+
+    .modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      animation: fadeIn 0.3s ease;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, #0a0a15 0%, #1a1a2e 100%);
+      padding: 40px;
+      border-radius: 12px;
+      border: 2px solid #00ff88;
+      max-width: 1100px;
+      max-height: 90%;
+      overflow-y: auto;
+      color: #00ff88;
+      box-shadow: 0 0 40px rgba(0, 255, 136, 0.4);
+      margin: auto;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      font-size: 28px;
+      color: #00ff88;
+      text-shadow: 0 0 15px #00ff88;
+      margin-bottom: 10px;
+    }
+
+    .modal-content h3 {
+      font-size: 20px;
+      color: #00ff88;
+      margin-top: 30px;
+      margin-bottom: 15px;
+    }
+
+    .fragment-badge {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .badge-elite { background: #ffd700; color: #000; }
+    .badge-denier { background: #ff4444; color: #fff; }
+    .badge-scientist { background: #0088ff; color: #fff; }
+    .badge-activist { background: #88ff00; color: #000; }
+
+    .impact-box {
+      background: rgba(255, 68, 68, 0.2);
+      border: 2px solid #ff4444;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .impact-box h3 {
+      color: #ff4444;
+      margin-top: 0;
+    }
+
+    .minigame-container {
+      background: rgba(0, 255, 136, 0.1);
+      border: 2px solid #00ff88;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .system-dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .system-card {
+      background: rgba(0, 136, 255, 0.15);
+      border: 2px solid #0088ff;
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .system-card.critical {
+      border-color: #ff4444;
+      background: rgba(255, 68, 68, 0.2);
+      animation: pulse-critical 1s infinite;
+    }
+
+    .system-card.excellent {
+      border-color: #00ff88;
+      background: rgba(0, 255, 136, 0.2);
+    }
+
+    .system-header {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      font-size: 13px;
+    }
+
+    .metric-value {
+      font-weight: bold;
+    }
+
+    .metric-value.good { color: #00ff88; }
+    .metric-value.bad { color: #ff4444; }
+    .metric-value.neutral { color: #ffa500; }
+
+    .policies-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+      max-height: 500px;
+      overflow-y: auto;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+    }
+
+    .policy-card {
+      background: rgba(0, 136, 255, 0.15);
+      border: 2px solid #0088ff;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .policy-card:hover:not(.disabled):not(.selected) {
+      background: rgba(0, 136, 255, 0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 136, 255, 0.4);
+    }
+
+    .policy-card.selected {
+      background: rgba(0, 255, 136, 0.25);
+      border-color: #00ff88;
+    }
+
+    .policy-card.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: #666;
+    }
+
+    .policy-card.synergy-highlight {
+      border-color: #00ff88;
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+    }
+
+    .policy-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .policy-icon {
+      font-size: 24px;
+    }
+
+    .policy-name {
+      font-weight: bold;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .policy-desc {
+      font-size: 12px;
+      margin-bottom: 8px;
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+
+    .policy-effects {
+      display: flex;
+      gap: 6px;
+      font-size: 11px;
+      flex-wrap: wrap;
+    }
+
+    .effect-badge {
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+
+    .effect-badge.positive { background: rgba(0, 255, 136, 0.3); color: #00ff88; }
+    .effect-badge.negative { background: rgba(255, 68, 68, 0.3); color: #ff4444; }
+
+    .button {
+      background: #00ff88;
+      color: #0a0a15;
+      border: none;
+      padding: 14px 32px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 20px;
+      margin-right: 10px;
+      font-family: 'Courier New', monospace;
+      transition: all 0.3s ease;
+    }
+
+    .button:hover {
+      background: #00cc6a;
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
+    }
+
+    .button:disabled {
+      background: #666;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .button-secondary {
+      background: #0088ff;
+      color: #0a0a15;
+    }
+
+    .button-secondary:hover {
+      background: #0066cc;
+    }
+
+    .round-info {
+      background: rgba(0, 136, 255, 0.2);
+      border: 2px solid #0088ff;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .crisis-modal {
+      background: rgba(255, 165, 0, 0.2);
+      border: 3px solid #ffa500;
+      border-radius: 12px;
+      padding: 25px;
+      margin: 20px 0;
+      animation: crisisAppear 0.5s ease;
+    }
+
+    @keyframes crisisAppear {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .game-over-box {
+      background: linear-gradient(135deg, rgba(255, 68, 68, 0.3), rgba(255, 136, 68, 0.3));
+      border: 3px solid #ff4444;
+      border-radius: 12px;
+      padding: 30px;
+      margin: 20px 0;
+      text-align: center;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(255, 68, 68, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(255, 68, 68, 0.8); }
+    }
+
+    .victory-box {
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.3), rgba(0, 255, 200, 0.3));
+      border: 3px solid #00ff88;
+      border-radius: 12px;
+      padding: 30px;
+      margin: 20px 0;
+      text-align: center;
+      animation: victory-pulse 2s infinite;
+    }
+
+    @keyframes victory-pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(0, 255, 136, 0.8); }
+    }
+
+    @keyframes pulse-critical {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .category-filter {
+      display: flex;
+      gap: 10px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      background: rgba(0, 136, 255, 0.2);
+      border: 2px solid #0088ff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s;
+    }
+
+    .filter-btn:hover {
+      background: rgba(0, 136, 255, 0.4);
+    }
+
+    .filter-btn.active {
+      background: rgba(0, 255, 136, 0.3);
+      border-color: #00ff88;
+    }
+
+    .sources {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0, 136, 255, 0.1);
+      border-left: 4px solid #0088ff;
+      font-size: 14px;
+    }
+
+    /* Styl pro kalkulačku uhlíkové stopy */
+    .cf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .cf-question label {
+      font-weight: bold;
+      font-size: 14px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .cf-question select {
+      width: 100%;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid #0088ff;
+      border-radius: 4px;
+      color: #00ff88;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+
+    .cf-note {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+    .mobile-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      padding: 0 20px;
+      display: none; /* defaultně skryté, ukážeme jen na menších displejích */
+      justify-content: space-between;
+      align-items: flex-end;
+      z-index: 20;
+      pointer-events: none; /* samotný kontejner nebrání kliknutí na canvas */
+    }
+
+    .mobile-dpad,
+    .mobile-action-wrapper {
+      pointer-events: auto; /* ale vnitřní prvky jsou klikatelné */
+    }
+
+    .mobile-dpad {
+      display: grid;
+      grid-template-columns: 60px 60px 60px;
+      grid-template-rows: 60px 60px 60px;
+      gap: 8px;
+    }
+
+    .mobile-btn {
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #00ff88;
+      border-radius: 999px;
+      font-size: 20px;
+      color: #00ff88;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-btn:active {
+      background: #00ff88;
+      color: #0a0a15;
+      box-shadow: 0 0 18px rgba(0, 255, 136, 0.7);
+      transform: scale(0.96);
+    }
+
+    .mobile-action {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      font-size: 24px;
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+    }
+
+    @media (max-width: 768px) {
+      /* Na mobilech posuneme textové ovládání výš, aby nepřekáželo */
+      .controls {
+        bottom: 110px;
+      }
+
+      .mobile-controls {
+        display: flex;
+      }
+    }
+
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="game-wrapper">
+   <canvas id="gameCanvas"></canvas>
+   <div class="hud">
+    <div class="hud-left">
+     <div id="yearDisplay">
+      🌍 ROK: 2125
+     </div>
+     <div id="locationDisplay">
+      📍 EVROPA - Rozpadlá civilizace
+     </div>
+    </div>
+    <div class="hud-right">
+     <div class="fragment-counter"><span id="fragmentCount">Fragmenty: 0/14</span>
+     </div>
+    </div>
+   </div>
+   <div class="controls">
+    <div>
+     🎮 WASD / Šipky: Pohyb | E: Sebrat fragment (když jste blízko)
+    </div>
+   </div>
+   <div class="mobile-controls">
+     <div class="mobile-dpad">
+       <div></div>
+       <button class="mobile-btn" data-dir="up">▲</button>
+       <div></div>
+
+       <button class="mobile-btn" data-dir="left">◀</button>
+       <div></div>
+       <button class="mobile-btn" data-dir="right">▶</button>
+
+       <div></div>
+       <button class="mobile-btn" data-dir="down">▼</button>
+       <div></div>
+     </div>
+
+     <div class="mobile-action-wrapper">
+       <button class="mobile-btn mobile-action" id="mobileAction">E</button>
+     </div>
+   </div>
+
+   <!-- BOČNÍ PANEL S DODATEČNÝMI MINIHRAMI -->
+   <div class="side-panel">
+    <button class="side-btn" onclick="openFactChecker()">
+      🧠 Fact-checker 2125
+    </button>
+    <button class="side-btn" onclick="openCarbonCalculator()">
+      🌿 Uhlíková stopa
+    </button>
+   </div>
+
+   <div id="modalContainer"></div>
+  </div>
+  <script>
+    const defaultConfig = {
+      game_title: "Fragmenty Budoucnosti 2125",
+      welcome_message: "Rok 2125. Noční satelitní snímky Evropy už neukazují známé tvary států – jen ostré linie hrází, tmavé skvrny vysušených oblastí a chaotické shluky světel tam, kde se lidé ještě dokázali udržet.\n\nSever se stal útočištěm: Norsko, Švédsko, Skotsko. Jih – Pyreneje, Itálie, Balkán – je spálený, vysušený, částečně opuštěný. Města, o kterých jste se učili v učebnicích, už v podobné podobě neexistují.\n\nTy jsi archivář/ka z budoucnosti. Poslední generace se snaží pochopit, kde se stala chyba. V ruinách starého kontinentu sbíráš fragmenty z roku 2025 – články, projevy, osobní deníky. Z každého místa zůstala jen krátká stopa. Poskládej je dohromady a zjisti, proč jsme nevyužili poslední šanci.",
+      final_message: "Fragmenty jsou kompletní. Zpráva je připravena k odeslání do roku 2025. Možná ji někdo vezme vážně.",
+      background_color: "#0a0a15",
+      surface_color: "#1a1a2e",
+      text_color: "#00ff88",
+      primary_action_color: "#00ff88",
+      secondary_action_color: "#0088ff"
+    };
+
+    /* Otázky pro Fact-checker 2125 */
+    const FACT_CHECK_QUESTIONS = [
+      {
+        id: 1,
+        statement: "„Klimatická změna je přirozený cyklus, vědci se neshodují, zda za ni může člověk.“",
+        correct: "misinfo",
+        explanation: "Více než 97 % publikujících klimatologů se shoduje, že současné oteplování je způsobeno hlavně člověkem. ‚Vědci se neshodují‘ je typická dezinformační rétorika."
+      },
+      {
+        id: 2,
+        statement: "„Spalování fosilních paliv zvyšuje koncentraci CO₂ v atmosféře a posiluje skleníkový efekt.“",
+        correct: "truth",
+        explanation: "Tohle je základní fyzika známá více než 100 let (Fourier, Arrhenius, Tyndall). To je jádro problému klimatické změny."
+      },
+      {
+        id: 3,
+        statement: "„Pár extrémně studených zim dokazuje, že se planeta neotepluje.“",
+        correct: "misinfo",
+        explanation: "Klima je dlouhodobý trend, počasí je krátkodobé. Globální oteplování nevylučuje lokálně studené epizody – právě naopak, může měnit proudění a extrémy zesilovat."
+      },
+      {
+        id: 4,
+        statement: "„Většinu světových emisí produkuje několik málo velkých firem, ale vlády a jednotlivci mají pořád zásadní roli v regulaci a poptávce.“",
+        correct: "truth",
+        explanation: "Velké fosilní firmy mají obrovský podíl, ale bez politických rozhodnutí, regulací a změny poptávky se nic nezmění. ‚Nemá smysl dělat nic, protože za to můžou jen korporace‘ je také forma rezignační dezinformace."
+      }
+    ];
+
+    const FRAGMENTS = [
+      { 
+        id: "elite_1", 
+        type: "elite", 
+        title: "CEO Energy Corp - Greenwashing", 
+        location: "Londýn", 
+        x: 360, 
+        y: 220,
+        historicalText: "Londýnské finanční centrum se leskne sklem a ocelí, ale uvnitř zasedačky je vzduch těžký – směs drahých parfémů, kávy a nervózních úsměvů. Kameramani míří na pódium, PR tým připraven, grafy na LED obrazovce září zelenými barvami.\n\n📊 VÝROČNÍ ZPRÁVA BP 2025 - PROJEV CEO\n\n\"Jsme hrdí na naši průkopnickou technologii 'Clean Coal Plus'. Investovali jsme 8 miliard dolarů do snížení emisí o 15 % oproti standardnímu uhlí. To je náš závazek k udržitelnější budoucnosti.\"\n\n\"Naše kampaň Beyond Petroleum pokračuje. Máme nyní 2 % investic v obnovitelných zdrojích. To je 400% nárůst oproti roku 2020!\"\n\n\"Zároveň jsme otevřeli 47 nových ropných vrtů v Severním moři. Musíme být realisté – svět potřebuje energii. Nemůžeme vypnout fosilní paliva ze dne na den.\"\n\nAkcionáři tleskají. Zisk: 28 miliard dolarů.\n\n--------------------------------\n🔍 Greenwashing v praxi:\n• Používání slov jako \"Clean\", \"Beyond\", \"Green\" u fosilních paliv\n• Zdůrazňování malých „zelených“ investic (2 %) a zamlčování obří fosilní části\n• Přesouvání odpovědnosti na spotřebitele místo na systém a výrobu",
+        impact2100: "🔥 'Čistší uhlí' bylo jen marketing. Emise pokračovaly. BP zkrachovalo v roce 2067 po ztrátě 2.4 bilionu dolarů na klimatických katastrofách a soudních žalobách. CEO byl v roce 2055 souzen za klimatický podvod – zemřel před verdiktem. Londýn je pravidelně zaplavován. Temže má nyní 8metrové protipovodňové zdi. 2% investice do obnovitelných zdrojů nestačily. 47 nových ropných vrtů přililo benzín do požáru.\n\n🧠 Lekce: Greenwashing oddálil skutečnou transformaci. Lidé měli pocit, že se 'něco dělá', zatímco se skoro nic nezměnilo.",
+        minigame: { type: "greenwashing_quiz" },
+        sources: ["IPCC AR6 Report (2021)", "The Guardian: Greenwashing investigation", "BP corporate reports"]
+      },
+      { 
+        id: "elite_2", 
+        type: "elite", 
+        title: "Carbon Offsety - Net-Zero Sliby", 
+        location: "Vídeň", 
+        x: 630, 
+        y: 360,
+        historicalText: "V luxusním konferenčním sále ve Vídni se za skleněnou stěnou třpytí řeka. Uvnitř zní klavírní hudba a číšníci roznášejí prosecco. Za řečnickým pultem visí velký nápis: \"NET-ZERO 2050 – ODPOVĚDNÝ BYZNYS\".\n\n\"Naše společnost se zavazuje k net-zero do roku 2050. Budeme kompenzovat naše emise prostřednictvím offsetových projektů v rozvojových zemích,\" říká CEO a na plátně se objevují fotky zelených lesů a usměvavých dětí.\n\n🧮 Jak funguje carbon offset:\n• Firma vypouští emise CO₂ (např. letecká společnost).\n• Zaplatí jinému subjektu, který údajně emise sníží (výsadba stromů, ochrana lesa, čisté vaření atd.).\n• Na papíře je bilance \"0\" – ale jen pokud jsou projekty skutečné, dodatečné, trvalé a měřitelné.\n\nProblém: Mnoho offsetů nesplňuje tyto podmínky. Některé „chrání les“, který nikdo nechtěl kácet. Jiné stromy uhynou za 10 let, zatímco CO₂ zůstane v atmosféře stovky let.",
+        impact2100: "💸 Pouze malá část offsetů měla měřitelný efekt. Část projektů byla podvod, část selhala po pár letech. Emise pokračovaly bez podstatné změny.\n\n🚨 Důsledek: Offsety se staly nástrojem odkládání skutečné transformace. Místo snižování emisí u zdroje se kupovaly levné papírové kredity.",
+        sources: ["The Guardian (2023)", "Science journal offsety study"]
+      },
+      { 
+        id: "denier_1", 
+        type: "denier", 
+        title: "Vzdělání a odolnost vůči dezinformacím", 
+        location: "Praha", 
+        x: 620, 
+        y: 320,
+        historicalText: "Televizní studio v Praze. Moderátor sedí za stolem, za ním velká obrazovka s nápisem „Klimatická PANIKA? Debata bez cenzury“. Vedle sebe má klimatologa a samozvaného „klimatického skeptika“, youtubera s milionem sledujících.\n\nSkeptik se usmívá do kamery: \"Klimatická změna je přirozený cyklus. Planeta se vždy oteplovala a ochlazovala. Neexistuje důkaz, že současné oteplování je způsobeno člověkem. Vědci se jen honí za granty.\"\n\nV chatu pod vysíláním se valí vlny komentářů, memů a emoji. Algoritmus miluje konflikt.\n\n--------------------------------\n🎓 Vzdělání a odolnost vůči dezinformacím:\n• Dezinformace často používají polopravdy – např. \"klima se vždy měnilo\", ale zamlčí, že tempo dnešního oteplování je řádově vyšší.\n• Často zpochybňují vědce (\"mají granty\", \"jsou zkorumpovaní\") místo argumentů.\n• Cíl není přesvědčit o nějaké alternativní teorii, ale zasít pochybnost: \"Nikdo nic neví, tak proč něco dělat?\"\n\n🛡️ Odolnost znamená:\n• Znát základní fakta (fyziku, vědecký konsenzus)\n• Umět rozpoznat emoční manipulaci a falešnou rovnováhu (\"vědec vs. youtuber\")\n• Vědět, jak fungují algoritmy sociálních sítí a echo-komory.",
+        impact2100: "🔥 Bylo to způsobeno člověkem. Oteplení bylo 10x rychlejší než jakákoli přirozená změna v historii. Popírání zpomalilo akci o 15 kritických let. Miliony lidí uvěřily, že \"se stejně nedá nic dělat\" – a to se stalo sebenaplňujícím se proroctvím.",
+        sources: ["IPCC AR6 WG1", "NASA Climate Data"]
+      },
+
+      { 
+        id: "scientist_1", 
+        type: "scientist", 
+        title: "Deník klimatoložky Dr. Bergström", 
+        location: "Stockholm", 
+        x: 800, 
+        y: 180,
+        historicalText: "Za oknem Stockholmské univerzity padá mokrý sníh, ale v zasedačce je vedro. Notebooky, grafy, kávové kelímky, podtrhané výtisky IPCC zprávy.\n\n22. srpna 2025 - Stockholm\n\nPráce na IPCC zprávě je hotová. 3 000 stran vědeckých důkazů. 234 autorů z 66 zemí. 14 000 citovaných studií. Závěr je jasný: +2.7 °C do roku 2100 při současných politikách.\n\nPrezentovala jsem to dnes politikům. Ukázala jsem jim grafy. Tající ledovce. Umírající korály. Migrace. Hladomory. Války o vodu.\n\nJeden ministr se zeptal: \"Ale jste si jistá? Co když se modely mýlí?\"\n\nOdpověděla jsem: \"Mýlily se. Realita je HORŠÍ, než předpovídaly modely před 20 lety. Vždy jsme byli příliš konzervativní.\"\n\nDruhý ministr: \"To je příliš alarmistické. Musíme být vyvážení.\"\n\nVyvážení? PLANETA JE V PLAMENECH. Co je vyvážené na tom říct pravdu?\n\nOdešla jsem z místnosti. Plakala jsem v autě. Strávila jsem 30 let studiem klimatu. A oni se stále ptají \"Jste si jistá?\"",
+        impact2100: "🌡️ Dr. Bergström měla naprostou pravdu. Bylo to +2.8 °C, přesně jak varovala. Její modely byly dokonce příliš optimistické – některé tipping pointy přišly dříve. Zemřela v roce 2063 ve věku 71 let, sledujíc kolaps systémů, před kterými varovala 38 let. Před smrtí řekla: \"Věděli jsme. Řekli jsme jim. A oni nás ignorovali.\" Její poslední publikace: \"Nebylo to o vědě. Bylo to o politické vůli, kterou nikdy neměli.\"",
+        sources: ["IPCC AR6 (2021)", "Nature: Tipping points", "Climate scientist testimonies"]
+      },
+      { 
+        id: "scientist_2", 
+        type: "scientist", 
+        title: "Norský Model - Příběh Transformace", 
+        location: "Oslo", 
+        x: 750, 
+        y: 150,
+        historicalText: "Na zasněženém parkovišti v Oslu stojí dlouhá řada tichých aut. Žádný zápach benzínu, žádný hluk motorů – jen pískání tramvají a šustění pneumatik na sněhu. Pro návštěvníky z roku 2025 to působilo skoro jako sci-fi.\n\nNorsko v roce 2025: 90 % nových aut jsou elektromobily. Jak jsme to dokázali?\n\n1️⃣ Využili jsme naše ropné bohatství CHYTŘE – investovali jsme do transformace, ne do luxusu.\n\n2️⃣ Masivní pobídky: Elektromobily bez DPH, bez silniční daně, zdarma parkování, jízda v busových pruzích.\n\n3️⃣ Hustá síť nabíječek – každých 50 km.\n\n4️⃣ Veřejný konsensus – všechny strany podporovaly změnu.\n\n5️⃣ Dlouhodobá vize – začali jsme v roce 1990, vytrvali 35 let.\n\nMůže to fungovat všude? Měli jsme výhodu ropného fondu 1.4 bilionu $. Ale princip je jasný: Investice + pobídky + infrastruktura + politická vůle = transformace je možná.",
+        impact2100: "🇳🇴 Norsko bylo vzácným příběhem úspěchu. Ale i ono čelilo problémům: Globální oteplování nešlo zastavit jednou zemí. Norské lesy hořely. Fjordy se oteplovaly. Rybolov kolaboval. Norsko bylo připravené, mělo zdroje na adaptaci. Většina světa ne. Ukázali správnou cestu, ale zbytek světa je nešel. Stále prodávali ropu a plyn jiným zemím – lokální čistota, globální emise pokračovaly.",
+        minigame: {
+          type: "norway_ev_transition",
+          startYear: 2025,
+          targetYear: 2035,
+          targetEVPercentage: 100,
+          budget: 50,
+          policies: [
+            { id: 1, name: "Žádné DPH na EV", cost: 5, effect: 15, desc: "Elektromobily bez 25% daně" },
+            { id: 2, name: "Zdarma parkování", cost: 3, effect: 8, desc: "EV parkují zdarma ve městech" },
+            { id: 3, name: "Busové pruhy", cost: 2, effect: 10, desc: "EV mohou jet v busových pruzích" },
+            { id: 4, name: "Nabíjecí síť", cost: 15, effect: 20, desc: "10 000 rychlonabíječek" },
+            { id: 5, name: "Dotace na nákup", cost: 10, effect: 18, desc: "5 000 € na každé EV" },
+            { id: 6, name: "Daň ze spalování", cost: -5, effect: 12, desc: "Extra daň na benzin/diesel auta" },
+            { id: 7, name: "Firemní flotily", cost: 8, effect: 14, desc: "Firmy musí mít 50 % EV" },
+            { id: 8, name: "Levná elektřina", cost: 12, effect: 16, desc: "Dotace na elektřinu pro dobíjení" }
+          ]
+        },
+        sources: ["Norwegian EV policy", "IEA Norway transport report", "Nature: Successful transition case study"]
+      },
+      { 
+        id: "activist_1", 
+        type: "activist", 
+        title: "Dopis studentky - Budoucnost která nás čeká", 
+        location: "Amsterdam", 
+        x: 480, 
+        y: 240,
+        historicalText: "Staré cihlové domy v Amsterdamu se zrcadlí v kanále, ale hladina vody je výš než kdy dřív. Na stole v malém podkrovním pokoji leží sešit s nálepkou \"KLIMA\" a rozpitý čaj.\n\n\"Milá babičko,\n\nJe mi 19 let a mám strach z budoucnosti. Studuji klimatologii na univerzitě v Amsterdamu. Každý den se učíme o katastrofě, která přichází – a nikdo nic nedělá.\n\nDnes jsme studovali zprávu IPCC. +2.7 °C do roku 2100. Víš, co to znamená? Znamená to, že já a moje generace budeme žít v pekle. Znamená to sucho, povodně, migrace, války.\n\nA vláda? 'Máme plán do roku 2050.' Já mám 19 let, babičko. V roce 2050 mi bude 44. Celý můj život – studium, kariéra, možná děti – vše ve světě, který se hroutí.\n\nProcházím po ulicích, vidím lidi, kteří žijí normální životy. Jako by nic. A já křičím uvnitř: 'Proč to nikoho nezajímá?!'\n\nSlibuješ mi, že budeš bojovat za moji budoucnost?\n\nS láskou,\nEmma\"",
+        impact2100: "💔 Emma měla pravdu. Dostala přesně tu budoucnost, které se bála. V roce 2069 (ve 63 letech) emigrovala do Skandinávie, když Amsterdam začal stavět 15metrové protipovodňové zdi. Její děti vyrůstaly ve světě klimatického chaosu. Její babička zemřela v roce 2038, aniž by viděla zásadní změnu. Emminy dopisy z roku 2025 se staly symbolem ztracené generace – generace, která viděla katastrofu přicházet a nikdo je neposlouchal.",
+        minigame: { type: "simple_quiz" },
+        sources: ["IPCC AR6 Youth perspectives", "Climate anxiety research", "Intergenerational justice studies"]
+      },
+      { 
+        id: "activist_2", 
+        type: "activist", 
+        title: "Opuštěné Město - Granada", 
+        location: "Granada", 
+        x: 360, 
+        y: 560,
+        historicalText: "Ráno v Granadě bývalo svěží. V roce 2025 se však město probouzí do dalšího dne s teplotami nad 40 °C ještě před polednem. Ulice se lesknou horkem, klimatizace hučí jako nekonečný chorál.\n\n\"Dnes jsem odešel naposledy. Granada je prázdná. Teploty v létě přesahují 48 °C. Voda je luxus. Stromy jsou mrtvé. Ulice jsou opuštěné. Pamatuji si, jak tu bylo krásně – Alhambra, zahrady, život. Teď je to peklo.\n\nVšichni se stěhují na sever. Němci, Poláci, Švédové nás nechtějí. Jsme 'klimatičtí uprchlíci'. Naše děti se ptají, proč jsme nechali zničit náš domov. Nemám odpověď.\"",
+        impact2100: "🔥 Jižní Španělsko je neobyvatelné. Granada byla opuštěna v roce 2068. 12 milionů Španělů uprchlo na sever. Evropa se rozdělila – bohatý chladný sever vs. vylidněný vypálený jih. Měli jsme 50 let na prevenci. Místo toho jsme budovali zdi proti uprchlíkům.",
+        minigame: { type: "simple_quiz" },
+        sources: ["IPCC AR6 Regional Impacts", "Mediterranean climate projections", "Climate migration studies"]
+      },
+      { 
+        id: "elite_3", 
+        type: "elite", 
+        title: "Energiewende Paradox - Německá Krize", 
+        location: "Berlín", 
+        x: 550, 
+        y: 270,
+        historicalText: "Berlín, tisková konference po Fukušimě. Transparenty „Atomkraft? Nein danke!“ ještě nestihly vyblednout. Politici stojí před kamerami a ohlašují „historické rozhodnutí“ – konec jaderných elektráren v Německu.\n\n📊 ANALÝZA NĚMECKÉ ENERGETICKÉ POLITIKY 2011–2025\n\n**ROZHODNUTÍ (2011):** Po Fukušimě Německo zavírá všechny jaderné elektrárny do roku 2022. Plán: nahradit je obnovitelnými zdroji.\n\n**REALITA (2022):** Jádro zavřené, ale obnovitelné nestihly nahradit kapacitu. Řešení? Plyn z Ruska. Nord Stream 2.\n\n**KRIZE (2022–2023):** Válka na Ukrajině. Ruský plyn přestal téct. Německo v energetickém šoku.\n\n**DŮSLEDKY:**\n• Ceny elektřiny: +340 % za 18 měsíců\n• Uhelné elektrárny znovu spuštěny (klimatické cíle zničeny)\n• Průmysl migruje do USA a Asie\n• Zima 2022/23: 12 000 úmrtí na podchlazení mezi chudými\n• Inflace: 11.6 % (nejvyšší od 1951)\n\n**POLITICKÝ EFEKT:**\n• AfD (populisté): 28 % v průzkumech\n• Protesty proti Green Deal: \"Nejdříve topení, pak klima!\"\n• Blokování EU klimatických politik\n• Paralýza německé vlády\n\n**CHYBA:** Zavřeli jsme jádro BEZ záložních zdrojů. Sázeli jsme vše na plyn. Od diktátora.",
+        impact2100: "⚡ Německá energetická krize se stala symbolem špatně provedené transformace. Ideál: 100% obnovitelné. Realita: Závislost na ruském plynu, pak na uhlí, pak kolaps průmyslu. Důsledky:\n\n🔥 **KLIMATICKÉ:** Německé emise vzrostly o 18 % v letech 2022–2027 kvůli návratu k uhlí. Cíle Green Dealu zmařeny.\n\n💸 **EKONOMICKÉ:** Německý průmysl (BASF, Siemens, BMW) přesunul výrobu do USA. 2.4 milionu pracovních míst ztraceno do roku 2045.\n\n🗳️ **POLITICKÉ:** Populistické strany využily krizi. AfD vládla v koalici 2029–2037. Blokovaly EU klimatickou legislativu po 15 let. Bez Německa jako lídra EU Green Deal selhal.\n\n❄️ **SOCIÁLNÍ:** Energetická chudoba postihla 18 milionů Němců. Společnost se rozštěpila: bohatí s tepelnými čerpadly vs. chudí mrznoucí v bytovkách.\n\n💀 **LEKCE:** Nebyla to jen německá chyba. Byla to chyba celé Evropy: Zavírání jádra bez alternativy + závislost na autoritářských režimech + absence solidarity = katastrofa. Energiewende nebyl špatný nápad. Byla to špatná implementace v nejhorším možném okamžiku.",
+        sources: ["German Energy Transition reports", "Nord Stream 2 analysis", "AfD electoral data", "IPCC AR6"]
+      },
+      { 
+        id: "elite_4", 
+        type: "elite", 
+        title: "Cap and Trade Policy", 
+        location: "Budapešť", 
+        x: 700, 
+        y: 390,
+        historicalText: "V zasedačce ministerstva v Budapešti se na stůl rozkládá barevná infografika EU ETS. Šipky, čísla, grafy, které mají veřejnosti vysvětlit, že vše je pod kontrolou.\n\nEU Green Deal byl ambiciózní plán. Jedním z nástrojů byla politika „cap and trade“ – stanovení celkového limitu emisí (cap) a možnost s povolenkami obchodovat (trade).\n\n🌍 Princip:\n• Politika určí maximální množství emisí (cap).\n• Firmy dostanou nebo koupí povolenky na určitý objem CO₂.\n• Kdo ušetří, může povolenky prodat. Kdo znečišťuje více, musí dokoupit.\n\nV ideálním světě cap postupně klesá a emise s ním. V reálném světě však lobby tlačilo na příliš štědré příděly, úniky výjimek a volné povolenky pro „strategické průmysly“.",
+        impact2100: "⚖️ Cap and trade mohl být velmi účinný, pokud by byl cap opravdu nízký a postupně klesající. Místo toho byl často příliš vysoký, povolenek bylo moc a cena CO₂ dlouho směšně nízká. Emise klesaly pomaleji, než bylo potřeba.\n\n📉 Tam, kde systém zpřísnili a odstranili výjimky, fungoval dobře. Tam, kde povolili výjimky a politické tlaky, se stal jen složitým účetním trikem.",
+        sources: ["EU ETS analysis", "European Green Deal documents"]
+      },
+      
+      { 
+        id: "activist_3", 
+        type: "activist", 
+        title: "Akční Vláda - Systémová Změna", 
+        location: "Lisabon", 
+        x: 220, 
+        y: 520,
+        historicalText: "V noci nad Lisabonem svítí jen pár lamp – zbytek města je v úsporném režimu. Uvnitř malé zasedačky však běží projektor a na stěně svítí tři slova: \"KLIMA – NEROVNOST – EKONOMIKA\".\n\n\"Potřebujeme radikální systémovou změnu napříč celou civilizací – ekonomika, energie, potraviny, společnost. Vše je propojené. Nemůžeme řešit klima bez řešení nerovnosti. Nemůžeme řešit nerovnost bez transformace ekonomiky. Je to obrovský komplexní systém. Změnit jeden prvek nestačí – musíme změnit celý systém najednou!\"",
+        impact2100: "🌀 Měli pravdu o propojenosti. Ale svět se snažil řešit problémy izolovaně. Ekonomové ignorovali klima. Ekologové ignorovali nerovnost. Politici řešili krátké cykly. Nikdo neviděl celý systém. Když byl jeden problém \"vyřešen\", způsobil to tři nové problémy jinde. Systém kolaboval jako domeček z karet.",
+        fragmentValue: 3,
+        minigame: {
+          type: "system_change",
+          startYear: 2025,
+          endYear: 2050,
+          rounds: 5,
+          budget: 200,
+          systems: {
+            economy: { 
+              name: "🏭 Ekonomika",
+              metrics: { gdp: 100, unemployment: 6, growth: 2.5 },
+              targets: { gdp: "≥80", unemployment: "≤8", growth: "≥1" }
+            },
+            climate: { 
+              name: "🌱 Klima",
+              metrics: { emissions: 100, temperature: 1.2, disasters: 5 },
+              targets: { emissions: "≤30", temperature: "≤1.8", disasters: "≤8" }
+            },
+            society: { 
+              name: "👥 Společnost",
+              metrics: { inequality: 65, happiness: 60, education: 70 },
+              targets: { inequality: "≤40", happiness: "≥70", education: "≥85" }
+            },
+            energy: { 
+              name: "⚡ Energie",
+              metrics: { renewable: 25, stability: 85, cost: 100 },
+              targets: { renewable: "≥80", stability: "≥80", cost: "≤120" }
+            },
+            food: { 
+              name: "🌾 Potraviny",
+              metrics: { production: 100, price: 100, security: 80 },
+              targets: { production: "≥95", price: "≤130", security: "≥90" }
+            },
+            ecosystem: { 
+              name: "🌍 Ekosystémy",
+              metrics: { biodiversity: 70, health: 65, protected: 15 },
+              targets: { biodiversity: "≥60", health: "≥70", protected: "≥30" }
+            }
+          },
+          policies: [
+            // EKONOMICKÉ
+            { id: 1, category: "economy", icon: "💼", name: "Universal Basic Income", desc: "Každý dostane 1000€/měsíc", 
+              effects: { economy: {unemployment:-3, growth:-0.5}, society: {inequality:-8, happiness:8}, climate: {emissions:2} }, 
+              cost: 80, synergy: [2, 15] },
+            { id: 2, category: "economy", icon: "⏰", name: "4denní týden", desc: "32 hodin/týden pro všechny", 
+              effects: { economy: {unemployment:-2, growth:-0.3}, society: {happiness:10}, climate: {emissions:-3} }, 
+              cost: 20, synergy: [1] },
+            { id: 3, category: "economy", icon: "🏢", name: "Kooperativy", desc: "Pracovníci vlastní 51% firem", 
+              effects: { economy: {growth:-0.2}, society: {inequality:-12, happiness:6} }, 
+              cost: 15, synergy: [1, 2] },
+            { id: 4, category: "economy", icon: "💰", name: "Daň 70%", desc: "Pro příjmy nad 1 mil €", 
+              effects: { economy: {growth:-0.4}, society: {inequality:-15} }, 
+              cost: -30, conflict: [5] },
+            { id: 5, category: "economy", icon: "📉", name: "Degrowth", desc: "Snížit HDP o 2%/rok", 
+              effects: { economy: {gdp:-10, growth:-2.5, unemployment:5}, climate: {emissions:-15}, ecosystem: {health:8} }, 
+              cost: 10, conflict: [4, 6] },
+            { id: 6, category: "economy", icon: "♻️", name: "Cirkulární 100%", desc: "Zákaz jednorázových produktů", 
+              effects: { economy: {growth:-0.2, unemployment:-1}, climate: {emissions:-8}, ecosystem: {health:6} }, 
+              cost: 40, synergy: [18] },
+            
+            // ENERGIE
+            { id: 7, category: "energy", icon: "☀️", name: "Solár masivně", desc: "Panely všude", 
+              effects: { energy: {renewable:15, cost:10, stability:3}, climate: {emissions:-12}, economy: {unemployment:-2} }, 
+              cost: 60, synergy: [8, 9] },
+            { id: 8, category: "energy", icon: "💨", name: "Offshore vítr", desc: "Tisíce turbín v moři", 
+              effects: { energy: {renewable:18, cost:12, stability:2}, climate: {emissions:-14} }, 
+              cost: 70, synergy: [7, 9] },
+            { id: 9, category: "energy", icon: "🔋", name: "Mega baterie", desc: "Skladování energie", 
+              effects: { energy: {renewable:5, stability:15, cost:8} }, 
+              cost: 50, synergy: [7, 8] },
+            { id: 10, category: "energy", icon: "⚛️", name: "Jádro SMR", desc: "Modulární reaktory", 
+              effects: { energy: {stability:12, cost:15}, climate: {emissions:-20}, society: {happiness:-8} }, 
+              cost: 90, unlock: 2 },
+            { id: 11, category: "energy", icon: "🏭", name: "Zavřít fosilní NOW", desc: "Okamžitě vše", 
+              effects: { energy: {renewable:20, cost:35, stability:-25}, climate: {emissions:-35}, economy: {unemployment:8, growth:-1.2}, society: {happiness:-15} }, 
+              cost: 20, conflict: [12] },
+            { id: 12, category: "energy", icon: "🕰️", name: "Postupně fosilní", desc: "Do roku 2040", 
+              effects: { energy: {renewable:10, cost:12, stability:-5}, climate: {emissions:-18}, economy: {unemployment:2} }, 
+              cost: 30, conflict: [11] },
+            
+            // POTRAVINY
+            { id: 13, category: "food", icon: "🌾", name: "Regenerativní", desc: "Obnovit půdu", 
+              effects: { food: {production:-5, price:15, security:8}, climate: {emissions:-6}, ecosystem: {health:12, biodiversity:6} }, 
+              cost: 35, synergy: [14, 21] },
+            { id: 14, category: "food", icon: "🥩", name: "Daň masa 200%", desc: "Zdražit maso 3x", 
+              effects: { food: {production:5, price:25}, climate: {emissions:-10}, ecosystem: {health:8}, society: {happiness:-12} }, 
+              cost: -20, synergy: [13, 15] },
+            { id: 15, category: "food", icon: "🧬", name: "Lab maso", desc: "Kultivované maso", 
+              effects: { food: {production:8, price:-10, security:5}, climate: {emissions:-8}, ecosystem: {biodiversity:4} }, 
+              cost: 45, synergy: [14], unlock: 3 },
+            { id: 16, category: "food", icon: "🌱", name: "Vertikální farmy", desc: "Ve městech", 
+              effects: { food: {production:10, price:5, security:12}, climate: {emissions:-3} }, 
+              cost: 55, unlock: 2 },
+            { id: 17, category: "food", icon: "🚜", name: "Malí farmáři", desc: "Dotace lokální", 
+              effects: { food: {security:10, price:8}, society: {happiness:5, inequality:-3}, ecosystem: {biodiversity:5} }, 
+              cost: 25, synergy: [13] },
+            
+            // EKOSYSTÉMY
+            { id: 18, category: "ecosystem", icon: "🌳", name: "10 mld stromů", desc: "Masivní zalesňování", 
+              effects: { ecosystem: {biodiversity:8, health:10, protected:5}, climate: {emissions:-5, disasters:-1} }, 
+              cost: 40, synergy: [19, 6] },
+            { id: 19, category: "ecosystem", icon: "🏞️", name: "50% chráněno", desc: "Půlka pro přírodu", 
+              effects: { ecosystem: {biodiversity:15, health:12, protected:20}, food: {production:-8}, economy: {growth:-0.3} }, 
+              cost: 30, synergy: [18, 20] },
+            { id: 20, category: "ecosystem", icon: "🐋", name: "Oceány regenerace", desc: "Zákaz rybolovu", 
+              effects: { ecosystem: {biodiversity:10, health:8}, food: {production:-5, security:-3}, climate: {disasters:-2} }, 
+              cost: 35, synergy: [19] },
+            { id: 21, category: "ecosystem", icon: "🦋", name: "Konec pesticidů", desc: "Zákaz chemie", 
+              effects: { ecosystem: {biodiversity:12, health:10}, food: {production:-10, price:20}, society: {happiness:5} }, 
+              cost: 20, synergy: [13, 6, 2] },
+            
+            // SPOLEČNOST
+            { id: 22, category: "society", icon: "🎓", name: "Vzdělání zdarma", desc: "Vše včetně univerzit", 
+              effects: { society: {education:15, happiness:8, inequality:-6}, economy: {unemployment:-3} }, 
+              cost: 50, synergy: [23, 24] },
+            { id: 23, category: "society", icon: "🏥", name: "Zdravotnictví pro všechny", desc: "Kompletní péče zdarma", 
+              effects: { society: {happiness:12, inequality:-8}, economy: {growth:-0.3} }, 
+              cost: 60, synergy: [22, 1] },
+            { id: 24, category: "society", icon: "🏘️", name: "Sociální bydlení", desc: "30% bytů státní", 
+              effects: { society: {happiness:10, inequality:-10}, economy: {unemployment:-2} }, 
+              cost: 70, synergy: [1, 22] },
+            { id: 25, category: "society", icon: "🚆", name: "Doprava zdarma", desc: "Vlaky/busy pro všechny", 
+              effects: { society: {happiness:15, inequality:-5}, climate: {emissions:-8}, economy: {growth:-0.2} }, 
+              cost: 45, synergy: [2] }
+          ],
+          crises: [
+            { round: 2, type: "pandemic", name: "🦠 PANDEMIE", desc: "Nová nemoc zasáhla svět", 
+              effects: { economy: {gdp:-8, unemployment:4, growth:-1.5}, society: {happiness:-10} } },
+            { round: 3, type: "drought", name: "🔥 MEGA SUCHO", desc: "Nejhorší sucho za 500 let", 
+              effects: { food: {production:-15, price:30, security:-12}, climate: {disasters:3}, ecosystem: {health:-8} } },
+            { round: 4, type: "recession", name: "💸 KRIZE", desc: "Globální recese", 
+              effects: { economy: {gdp:-12, unemployment:6, growth:-2}, society: {happiness:-8} } },
+            { round: 2, type: "breakthrough", name: "🌟 PRŮLOM", desc: "Levné baterie!", 
+              effects: { energy: {cost:-20, renewable:8}, economy: {growth:0.8} } },
+            { round: 3, type: "revolution", name: "✊ POVSTÁNÍ", desc: "Protesty za spravedlnost", 
+              effects: { society: {happiness:15, inequality:-5}, economy: {growth:-0.5} } }
+          ]
+        },
+        sources: ["Systems Thinking", "Limits to Growth", "Doughnut Economics", "IPCC AR6"]
+      },
+      { 
+        id: "activist_4", 
+        type: "activist", 
+        title: "Deník Adriany - Komunikace je klíč", 
+        location: "Madrid", 
+        x: 300, 
+        y: 530,
+        historicalText: "Z asfaltu v Madridu sálá večer teplo jako z rozžhavené plotny. Na náměstí stojí tisíce lidí s transparenty – část žádá radikální klimatická opatření, část skanduje proti „ekofanatikům“.\n\n\"Přestěhovala jsem se z Granady, kde už není k žití. Horko je nesnesitelné. Dnes jsme protestovali před parlamentem – 50 000 lidí. Někteří aktivisté jsou fanatičtí, lepí se na silnice, ničí umění. Já chápu jejich zoufalství, ale takhle jen polarizujeme společnost.\n\nLidé na nás křičí 'ekoteroristé!'. Nikdo nenaslouchá. Nikdo nekomunikuje. Házejí nás všechny do jednoho pytle. Potřebujeme dialog, ne konfrontaci. Potřebujeme porozumění, ne nenávist. Náš cíl je přece společný – aby naše děti žily v bezpečném světě. Proč to ostatní nevidí? Proč nemůžeme mluvit jako lidé, ne jako nepřátelé?\"",
+        impact2100: "💔 Polarizace zvítězila nad dialogem. Společnost se rozštěpila na tábory, které spolu přestaly komunikovat. Aktivisté byli démonizováni. Umírnění aktivisté jako Adriana byli umlčeni vlastními radikály i odpůrci. Bez dialogu nepřišla žádná změna. Adriana zemřela v roce 2067 při klimatické vlně veder v Madridu, kterému se již říkalo \"Saharské město\". Měla pravdu – komunikace byla klíčem, který jsme nikdy nepoužili.",
+        minigame: { type: "simple_quiz" },
+        sources: ["Climate activism research", "Polarization studies", "Communication theory"]
+      },
+      { 
+        id: "activist_5", 
+        type: "activist", 
+        title: "🎙️ Audio / video záznam - Pierre Dubois, vinař", 
+        location: "Provence", 
+        x: 420, 
+        y: 490,
+        historicalText: "Chápete jídlo jako běžné zboží, které by mělo být co nejlevnější? Podle Jeana Matthieu Thévenota, ekologického zemědělce a zástupce evropských malých farmářů (ECVC), je to zásadní omyl: „Vždy jsme říkali, že jídlo není komodita. Jídlo je základem života,“ říká. Proto by podle něj „nemělo být zahrnuto do systému Světové obchodní organizace ani do jakékoli dohody o volném obchodu,“ protože to není auto ani počítač. V tomto poutavém záznamu rozhovoru odhaluje Thévenot, proč jsou evropští farmáři první, koho dopadají změny klimatu i pesticidy, a jak je průmysl manipuluje, aby se postavili proti ekologům.",
+        impact2100: "Jean Matthieu Thévenot, ekologický farmář zastává fundamentální princip, že potraviny nejsou komodita a neměly by být zahrnuty do systému Světové obchodní organizace (WTO) ani do žádné dohody o volném obchodu, protože jídlo je základem života a ne auto či počítač. Thévenot tvrdí, že současný systém kapitalismu a volného obchodu zvýhodňuje nadnárodní společnosti a vytváří „falešný spor“ mezi farmáři a ekology, přičemž farmáři, kteří jsou první zasaženi pesticidy a klimatickými změnami, platí cenu systému v podobě velmi nízkých příjmů. Systémovou změnu je možné dosáhnout prostřednictvím stanovení minimálních cen a zákazem dovozu, který nedodržuje evropské standardy, a zavedením intervenčního stanovení cen ze strany vlád, které by nutilo supermarkety nakupovat dovážené zboží za stejnou cenu jako lokální.",
+        mediaUrl: "https://drive.google.com/file/d/1oBKtQeCOVtRG0CA6FeooDcseVvkLzC1N/preview",
+        mediaLabel: "Audio / video záznam z Provence",
+        minigame: { type: "provence_quiz" },
+        sources: ["Nature: Mediterranean agriculture collapse", "IPCC AR6 Regional Chapter Europe", "Climate impact on viticulture"]
+      },
+      { 
+        id: "scientist_3", 
+        type: "scientist", 
+        title: "📹 Video: Poslední den Lauwersogu", 
+        location: "Lauwersoog", 
+        x: 520, 
+        y: 200,
+        historicalText: "Ponořte se do vizionářského přístupu Nizozemska k boji proti důsledkům klimatické změny – zejména proti zrychlujícímu se stoupání hladiny moře. Toto video nabízí vhled do špičkového výzkumu a inovativních projektů, které se snaží zajistit dlouhodobou bezpečnost této nížinné země. Riziko povodní se zvyšuje: Nizozemsko je globální špičkou v managementu pobřežní ochrany, ale riziko povodní stoupá. Voda, kterou dnes vidíme jen jednou za století, se do konce tohoto století může objevovat každé dva až deset let. Klimatoložka Amay Slongan (spoluautorka zprávy OSN o změně klimatu z roku 2021) upozorňuje, že hladina moře může do poloviny století stoupnout v průměru o 25 centimetrů.\nČas hraje roli: Vědci zdůrazňují, že ačkoli je dnes nizozemská Delta jednou z nejlépe chráněných na světě, je nutné začít s výzkumem a úpravami ihned. Procesy, jako je vytváření ochranných slanisek, jsou pomalé a „pokud bychom čekali do let 2050 až 2100, nezbyl by čas na úpravu systému.\"",
+        impact2100: "🌊 Lauwersoog byl opuštěn v roce 2073 po katastrofální povodni. Hráze selhaly při nárůstu hladiny o 2.8 metru. Amsterdam má nyní 18metrové protipovodňové zdi, ale většina pobřežního Nizozemska je pod vodou. 8 milionů Nizozemců bylo evakuováno – největší klimatická migrace v Evropě. Dr. van Dijk měla pravdu – antarktický ledovec kolaboval rychleji než modely předpovídaly. Nizozemské inženýrství, tisíc let zkušeností, nebylo dost proti tomu, co jsme rozpoutali. Ti, co zachytili toto video, dokumentovali konec jedné civilizace.",
+        minigame: { type: "simple_quiz" },
+        mediaType: "video",
+        mediaUrl: "https://drive.google.com/file/d/1oCeoKx2s1ZnMi7qP4BXN0Bz7QkoH_zYN/preview",
+        mediaLabel: "Video z Lauwersogu (Google Drive)",
+        sources: ["IPCC AR6 Sea Level Rise", "Netherlands Delta Programme", "Antarctic ice sheet studies"]
+      },
+      { 
+        id: "denier_3", 
+        type: "denier", 
+        title: "Corriere della Sera - Politický Odpor", 
+        location: "Řím", 
+        x: 580, 
+        y: 600,
+        historicalText: "Letní Řím, rozpálené ulice a klimatizované kanceláře. V jedné z nich právě vzniká článek, který poběží na titulní straně.\n\n📰 CORRIERE DELLA SERA – 15. března 2025\n\n\"KLIMATICKÁ AGENDA JE ÚTOK NA ITALSKÝ PRŮMYSL\" – Vicepremiér\n\n\"Green Deal je bruselská diktatura, která chce zničit naše automobilky, naše zemědělství, náš způsob života,\" prohlásil dnes na tiskové konferenci vicepremiér.\n\n\"Klimatická změna? Planeta se vždy měnila. Toto je politický výmysl Evropské unie, která chce ovládat suverénní státy. Nebudeme se klanět Bruselu!\"\n\nNa protivládních demonstracích v Římě dnes policie zasahovala slzným plynem. Tisíce Italů protestují proti 'ekologické tyranii'.\n\nOpozice: \"Tento klimatický populismus odkládá nutnou transformaci. Následky budou katastrofální.\"\n\nSpolečnost je hluboce rozdělená. Situace eskaluje.",
+        impact2100: "🔥 Itálie byla mezi prvními evropskými zeměmi, které se staly neobyvatelné. Teploty v létě pravidelně přesahovaly 50 °C. Řím byl opuštěn v roce 2071. Politický odpor zpozdil transformaci o kritických 15 let. Italský průmysl byl zničen – ne klimatickými opatřeními, ale klimatem samotným. Továrny, které \"chránili\" před regulacemi, skončily pod vodou nebo v plamenech. Politici, kteří varovali před 'bruselskou diktaturou', uprchli do švýcarských Alp. Vicepremiér zemřel v roce 2069 při povodních v Miláně.",
+        minigame: { type: "simple_quiz" },
+        sources: ["EU policy resistance studies", "Political polarization in climate action", "Italian climate politics"]
+      },
+      { 
+        id: "elite_5", 
+        type: "elite", 
+        title: "Energiewende Paradox - Německá Energetická Krize", 
+        location: "Berlín", 
+        x: 550, 
+        y: 270,
+        historicalText: "V bruselských kancelářích se rodil Green Deal, ale v německých uhelných regionech se rodil hněv. Na jedné straně prezentace o udržitelné budoucnosti, na druhé straně horníci, kteří neviděli pro svůj region žádnou alternativu.\n\nGreen Deal byl ambiciózní: klimatická neutralita do roku 2050, 55% snížení emisí do roku 2030, transformace energetiky, dopravy, zemědělství. Ale selhala komunikace. Lidé nerozuměli, proč. Selhalo vysvětlování. Brusel mluvil technokraticky, ne lidsky.\n\nSelhala zahraniční politika – závislost na ruském plynu přetrvala. Některé státy bojkotovaly: Polsko, Maďarsko, později Itálie. Řízení shora nefungovalo – regiony a města neměly pravomoci. Průmysl loboval proti každé změně. A hlavně – chyběla spravedlivá transformace. Dělníci v uhelných oblastech byli opuštěni.\n\nV roce 2035 jsme splnili pouze 40 % cílů. Bylo už pozdě.",
+        impact2100: "⚖️ Green Deal mohl zachránit Evropu. Měl správné cíle. Ale způsob implementace selhal. Technokratické řízení shora vs. demokratický dialog zdola. Závislost na autoritářských režimech. Nedostatečná komunikace. Absence spravedlnosti. Výsledek: Emise pokračovaly, cíle nesplněny, Evropa rozdělená, transformace neúplná. Bylo to \"příliš málo, příliš pozdě\" – ne proto, že Green Deal byl špatný, ale proto, že nebyl správně implementován.",
+        sources: ["European Green Deal official documents", "EEA reports", "EU climate policy analysis"]
+      }
+    ];
+
+    const WORLD_WIDTH = 1400;
+    const WORLD_HEIGHT = 900;
+
+    let canvas, ctx, player, fragments, camera, keys, gameState, collectedFragments, currentFragment;
+
+    async function onConfigChange(config) {
+      document.body.style.background = `linear-gradient(135deg, ${config.background_color || defaultConfig.background_color} 0%, ${config.surface_color || defaultConfig.surface_color} 100%)`;
+    }
+
+    const capabilities = {
+      recolorables: [
+        {
+          get: () => window.elementSdk?.config?.background_color || defaultConfig.background_color,
+          set: (value) => {
+            if (window.elementSdk?.config) {
+              window.elementSdk.config.background_color = value;
+              window.elementSdk.setConfig({ background_color: value });
+            }
+          }
+        },
+        {
+          get: () => window.elementSdk?.config?.surface_color || defaultConfig.surface_color,
+          set: (value) => {
+            if (window.elementSdk?.config) {
+              window.elementSdk.config.surface_color = value;
+              window.elementSdk.setConfig({ surface_color: value });
+            }
+          }
+        },
+        {
+          get: () => window.elementSdk?.config?.text_color || defaultConfig.text_color,
+          set: (value) => {
+            if (window.elementSdk?.config) {
+              window.elementSdk.config.text_color = value;
+              window.elementSdk.setConfig({ text_color: value });
+            }
+          }
+        },
+        {
+          get: () => window.elementSdk?.config?.primary_action_color || defaultConfig.primary_action_color,
+          set: (value) => {
+            if (window.elementSdk?.config) {
+              window.elementSdk.config.primary_action_color = value;
+              window.elementSdk.setConfig({ primary_action_color: value });
+            }
+          }
+        },
+        {
+          get: () => window.elementSdk?.config?.secondary_action_color || defaultConfig.secondary_action_color,
+          set: (value) => {
+            if (window.elementSdk?.config) {
+              window.elementSdk.config.secondary_action_color = value;
+              window.elementSdk.setConfig({ secondary_action_color: value });
+            }
+          }
+        }
+      ],
+      borderables: [],
+      fontEditable: undefined,
+      fontSizeable: undefined
+    };
+
+    function mapToCapabilities(config) {
+      return capabilities;
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ["game_title", config.game_title || defaultConfig.game_title],
+        ["welcome_message", config.welcome_message || defaultConfig.welcome_message],
+        ["final_message", config.final_message || defaultConfig.final_message]
+      ]);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+
+    function init() {
+      canvas = document.getElementById('gameCanvas');
+      if (!canvas) return;
+      ctx = canvas.getContext('2d');
+      
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      player = { 
+        x: WORLD_WIDTH / 2, 
+        y: WORLD_HEIGHT / 2, 
+        size: 20,
+        speed: 200
+      };
+      
+      camera = { x: 0, y: 0 };
+      keys = {};
+      gameState = 'playing';
+      collectedFragments = [];
+      currentFragment = null;
+
+      fragments = FRAGMENTS.map(f => ({
+        ...f,
+        collected: false,
+        pulse: Math.random() * Math.PI * 2
+      }));
+
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+      setupMobileControls();
+
+      showWelcomeModal();
+      gameLoop();
+
+      showWelcomeModal();
+      gameLoop();
+    }
+
+    // ✅ OPRAVA: plátno se vždy roztáhne na okno
+    function resizeCanvas() {
+      if (!canvas) return;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function handleKeyDown(e) {
+      const key = e.key.toLowerCase();
+      keys[key] = true;
+
+      if (key === 'e' && gameState === 'playing') {
+        const nearestFragment = getNearestFragment();
+        if (nearestFragment && nearestFragment.distance < 60 && !nearestFragment.collected) {
+          showFragmentModal(nearestFragment);
+        }
+      }
+    }
+
+    function showWelcomeModal() {
+      const config = window.elementSdk?.config || defaultConfig;
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h2>🌍 ${config.game_title}</h2>
+          <p style="font-size: 16px; line-height: 1.8; white-space: pre-wrap;">${config.welcome_message}</p>
+          <p style="margin-top: 20px; font-size: 16px;">📰 <strong>POSLEDNÍ ZPRÁVY Z ROKU 2100:</strong></p>
+          <ul style="font-size: 16px; line-height: 1.8;">
+            <li>Globální teplota: +2.8 °C</li>
+            <li>Hladina moří: +1.2 metru</li>
+            <li>Klimatických uprchlíků: 2.1 miliardy</li>
+            <li>Vyhynulých druhů: 35 %</li>
+            <li>Poslední ledovec: 2061</li>
+          </ul>
+          <p style="margin-top: 20px; font-size: 16px;">🎯 <strong>Vaše mise:</strong> Prozkoumejte zpustošenou Evropu a najděte 11 fragmentů historie z roku 2025. Každý fragment odhaluje, proč jsme selhali.</p>
+          <button class="button" onclick="closeModal()">Začít misi</button>
+        </div>
+      `;
+      document.getElementById('modalContainer').appendChild(modal);
+    }
+
+    function renderMedia(fragmentData) {
+      if (!fragmentData || !fragmentData.mediaUrl) return '';
+      const label = fragmentData.mediaLabel || 'Záznam';
+      return `
+        <h3>🎥 ${label}:</h3>
+        <div style="margin: 10px 0 25px 0; text-align:center;">
+          <iframe src="${fragmentData.mediaUrl}" width="560" height="315" style="max-width:100%; border:0;" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+      `;
+    }
+
+    function showFragmentModal(fragment) {
+      currentFragment = fragment;
+      const fragmentData = FRAGMENTS.find(f => f.id === fragment.id);
+      
+      const typeIcons = {
+        elite: '👔',
+        denier: '🚫',
+        scientist: '🔬',
+        activist: '📢'
+      };
+
+      const typeLabels = {
+        elite: 'ELITY',
+        denier: 'POPÍRAČI',
+        scientist: 'VĚDCI',
+        activist: 'AKTIVISTÉ'
+      };
+
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h2>${typeIcons[fragmentData.type]} ${fragmentData.title}</h2>
+          <div class="fragment-badge badge-${fragmentData.type}">
+            ${fragmentData.location} | ${typeLabels[fragmentData.type]}
+          </div>
+          
+          <h3>📜 Historický záznam (2025):</h3>
+          <p style="font-size: 16px; line-height: 1.8; white-space: pre-wrap;">${fragmentData.historicalText}</p>
+          
+          ${renderMedia(fragmentData)}
+          
+          ${renderMinigame(fragmentData.minigame)}
+          
+          <div class="impact-box">
+            <h3>⚠️ DOPAD v roce 2100:</h3>
+            <p style="font-size: 16px; line-height: 1.6; white-space: pre-wrap;">${fragmentData.impact2100}</p>
+          </div>
+          
+          <div class="sources">
+            <strong>📚 Vědecké zdroje:</strong><br>
+            ${fragmentData.sources.map(s => `• ${s}`).join('<br>')}
+          </div>
+          
+          <div id="fragmentActions">
+            <button class="button" id="collectBtn" onclick="collectCurrentFragment()">Sesbírat fragment</button>
+            <button class="button button-secondary" onclick="closeModal()">Zavřít</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('modalContainer').appendChild(modal);
+
+      if (fragmentData.minigame && fragmentData.minigame.type === 'system_change') {
+        setTimeout(() => initSystemChange(), 100);
+      }
+      
+      if (fragmentData.minigame && fragmentData.minigame.type === 'norway_ev_transition') {
+        setTimeout(() => initNorwayGame(), 100);
+      }
+    }
+    
+    // NORWAY EV GAME
+    let norwayState = null;
+    
+    function initNorwayGame() {
+      const fragment = FRAGMENTS.find(f => f.id === currentFragment.id);
+      if (!fragment || !fragment.minigame || fragment.minigame.type !== 'norway_ev_transition') return;
+      
+      const mg = fragment.minigame;
+      norwayState = {
+        budget: mg.budget,
+        selectedPolicies: [],
+        policies: mg.policies
+      };
+      
+      renderNorwayPolicies();
+    }
+    
+    function renderNorwayPolicies() {
+      const container = document.getElementById('norwayPolicies');
+      if (!container || !norwayState) return;
+      
+      container.innerHTML = norwayState.policies.map(policy => `
+        <div style="background: rgba(0, 136, 255, 0.15); border: 2px solid #0088ff; padding: 12px; border-radius: 6px; cursor: pointer; transition: all 0.3s;" 
+             class="norway-policy-card" 
+             data-policy-id="${policy.id}"
+             onclick="toggleNorwayPolicy(${policy.id})">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-weight: bold; font-size: 14px;">${policy.name}</div>
+            <div style="font-size: 20px;">☐</div>
+          </div>
+          <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">${policy.desc}</div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px;">
+            <span style="color: ${policy.cost > 0 ? '#ff4444' : '#00ff88'};">
+              ${policy.cost > 0 ? '-' : '+'}${Math.abs(policy.cost)} mld €
+            </span>
+            <span style="color: #00ff88;">+${policy.effect}% EV</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    window.toggleNorwayPolicy = function(policyId) {
+      if (!norwayState) return;
+      
+      const index = norwayState.selectedPolicies.indexOf(policyId);
+      const card = document.querySelector(`[data-policy-id="${policyId}"]`);
+      
+      if (index > -1) {
+        norwayState.selectedPolicies.splice(index, 1);
+        card.style.background = 'rgba(0, 136, 255, 0.15)';
+        card.style.borderColor = '#0088ff';
+        card.querySelector('div[style*="font-size: 20px"]').textContent = '☐';
+      } else {
+        norwayState.selectedPolicies.push(policyId);
+        card.style.background = 'rgba(0, 255, 136, 0.25)';
+        card.style.borderColor = '#00ff88';
+        card.querySelector('div[style*="font-size: 20px"]').textContent = '☑';
+      }
+      
+      updateNorwayDisplay();
+    };
+    
+    function updateNorwayDisplay() {
+      if (!norwayState) return;
+      
+      let totalCost = 0;
+      let totalEffect = 0;
+      
+      norwayState.selectedPolicies.forEach(id => {
+        const policy = norwayState.policies.find(p => p.id === id);
+        totalCost += policy.cost;
+        totalEffect += policy.effect;
+      });
+      
+      const remainingBudget = norwayState.budget - totalCost;
+      
+      const budgetEl = document.getElementById('norwayBudget');
+      const evEl = document.getElementById('norwayEVPercent');
+      const progressEl = document.getElementById('norwayProgress');
+
+      if (!budgetEl || !evEl || !progressEl) return;
+      
+      budgetEl.textContent = `${remainingBudget} mld €`;
+      budgetEl.style.color = remainingBudget < 0 ? '#ff4444' : '#00ff88';
+      
+      const evPercent = Math.min(totalEffect, 100);
+      evEl.textContent = `${evPercent}%`;
+      progressEl.style.width = `${evPercent}%`;
+    }
+    
+    window.calculateNorwayResult = function() {
+      if (!norwayState) return;
+      
+      let totalCost = 0;
+      let totalEffect = 0;
+      
+      norwayState.selectedPolicies.forEach(id => {
+        const policy = norwayState.policies.find(p => p.id === id);
+        totalCost += policy.cost;
+        totalEffect += policy.effect;
+      });
+      
+      const remainingBudget = norwayState.budget - totalCost;
+      const resultDiv = document.getElementById('norwayResult');
+      
+      if (!resultDiv) return;
+
+      if (remainingBudget < 0) {
+        resultDiv.innerHTML = `
+          <div style="background: rgba(255, 68, 68, 0.2); border: 2px solid #ff4444; padding: 20px; border-radius: 8px;">
+            <h3 style="color: #ff4444; margin: 0 0 10px 0;">💸 ROZPOČET PŘEKROČEN</h3>
+            <p>Překročili jste rozpočet o ${Math.abs(remainingBudget)} mld €. Vyberte levnější politiky.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      if (totalEffect >= 100) {
+        resultDiv.innerHTML = `
+          <div style="background: rgba(0, 255, 136, 0.2); border: 2px solid #00ff88; padding: 25px; border-radius: 8px;">
+            <h3 style="color: #00ff88; margin: 0 0 15px 0;">✅ TRANSFORMACE ÚSPĚŠNÁ!</h3>
+            <p style="font-size: 16px; line-height: 1.6;">
+              Dosáhli jste 100 % elektromobility! Norský model funguje:
+            </p>
+            <ul style="font-size: 15px; line-height: 1.8;">
+              <li>✅ Kombinace pobídek (mrkvičky) a daní (biče)</li>
+              <li>✅ Investice do infrastruktury</li>
+              <li>✅ Dlouhodobá vize napříč politickým spektrem</li>
+              <li>✅ Využití přírodního bohatství pro transformaci</li>
+            </ul>
+            <p style="margin-top: 15px; font-size: 14px; opacity: 0.9;">
+              💡 Klíčová lekce: Transformace je možná, pokud jsou správné politiky a politická vůle.
+            </p>
+          </div>
+        `;
+        
+        const collectBtn = document.getElementById('collectBtn');
+        if (collectBtn) {
+          collectBtn.style.display = 'inline-block';
+          collectBtn.disabled = false;
+        }
+        
+        const calcBtn = document.getElementById('norwayCalculateBtn');
+        if (calcBtn) calcBtn.disabled = true;
+      } else {
+        resultDiv.innerHTML = `
+          <div style="background: rgba(255, 165, 0, 0.2); border: 2px solid #ffa500; padding: 20px; border-radius: 8px;">
+            <h3 style="color: #ffa500; margin: 0 0 10px 0;">⚠️ ČÁSTEČNÝ ÚSPĚCH</h3>
+            <p>Dosáhli jste pouze ${totalEffect}% EV. Potřebujete více politik nebo efektivnější kombinaci.</p>
+            <p style="margin-top: 10px; font-size: 14px;">💡 Tip: Některé politiky se vzájemně posilují.</p>
+          </div>
+        `;
+      }
+    };
+    
+    // SYSTEM CHANGE GAME
+    let systemState = null;
+    let currentFilter = 'all';
+
+    function renderMinigame(minigame) {
+      if (!minigame) return '';
+
+      if (minigame.type === 'norway_ev_transition') {
+        return `
+          <div class="minigame-container">
+            <h3>🎮 Minihra: Norská Transformace na Elektromobilitu</h3>
+            <p style="font-size: 14px; margin: 10px 0;">
+              Cíl: Dosáhnout 100 % elektromobilů do roku 2035. Rozpočet: ${minigame.budget} mld €
+            </p>
+            
+            <div style="background: rgba(0, 136, 255, 0.15); padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #0088ff;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div>
+                  <div style="font-size: 18px; font-weight: bold;">📊 Podíl EV:</div>
+                  <div style="font-size: 32px; font-weight: bold; color: #00ff88;" id="norwayEVPercent">0%</div>
+                </div>
+                <div>
+                  <div style="font-size: 18px; font-weight: bold;">💰 Zbývá:</div>
+                  <div style="font-size: 32px; font-weight: bold;" id="norwayBudget">${minigame.budget} mld €</div>
+                </div>
+              </div>
+              <div style="background: rgba(0,0,0,0.3); height: 30px; border-radius: 15px; overflow: hidden;">
+                <div id="norwayProgress" style="height: 100%; background: linear-gradient(90deg, #00ff88, #00cc6a); width: 0%; transition: width 0.5s;"></div>
+              </div>
+            </div>
+            
+            <h4>🔧 Vyberte politiky (můžete kombinovat):</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 20px 0;" id="norwayPolicies"></div>
+            
+            <div id="norwayResult" style="margin: 20px 0;"></div>
+            
+            <div style="text-align: center;">
+              <button class="button" onclick="calculateNorwayResult()" id="norwayCalculateBtn">
+                Spočítat výsledek
+              </button>
+            </div>
+          </div>
+        `;
+      }
+      
+      if (minigame.type === 'system_change') {
+        return `
+          <div class="minigame-container">
+            <h3>🎮 Minihra: Systémová Změna 2025–2050</h3>
+            <p style="font-size: 14px; margin: 10px 0;">Transformujte celou civilizaci za 25 let! Vše je propojené – každá politika ovlivňuje všechny systémy. Cíl: Dosáhnout všech target hodnot do roku 2050.</p>
+            
+            <div class="round-info" id="systemRoundInfo">
+              📅 ROK 2025 | KOLO 1/5 | Rozpočet: 200 mld €
+            </div>
+
+            <div class="system-dashboard" id="systemDashboard"></div>
+
+            <div class="category-filter" id="categoryFilter">
+              <div class="filter-btn active" data-cat="all" onclick="filterPolicies('all')">🌐 Vše</div>
+              <div class="filter-btn" data-cat="economy" onclick="filterPolicies('economy')">🏭 Ekonomika</div>
+              <div class="filter-btn" data-cat="energy" onclick="filterPolicies('energy')">⚡ Energie</div>
+              <div class="filter-btn" data-cat="food" onclick="filterPolicies('food')">🌾 Potraviny</div>
+              <div class="filter-btn" data-cat="ecosystem" onclick="filterPolicies('ecosystem')">🌍 Ekosystémy</div>
+              <div class="filter-btn" data-cat="society" onclick="filterPolicies('society')">👥 Společnost</div>
+            </div>
+
+            <div class="policies-grid" id="systemPoliciesGrid"></div>
+
+            <div id="crisisContainer"></div>
+
+            <div style="text-align: center; margin: 20px 0;">
+              <button class="button" onclick="advanceSystemRound()" id="systemAdvanceBtn">
+                Pokračovat do dalšího období (5 let) ➜
+              </button>
+            </div>
+
+            <div id="systemResult"></div>
+          </div>
+        `;
+      }
+
+      if (minigame.type === 'provence_quiz') {
+        return `
+          <div class="minigame-container">
+            <h3>🎮 Minihra: Kvíz – Rozumíš příběhu?</h3>
+            <p style="font-size: 14px; margin: 10px 0;">
+              Odpověz na otázky k příběhu (audio/video záznam). Potom klikni na „Vyhodnotit kvíz“.
+            </p>
+
+            <ol style="font-size: 14px; line-height: 1.7; padding-left: 20px;">
+              <li style="margin-bottom: 12px;">
+                Kdo je podle Jeana Matthieu Thévenota skutečným protivníkem malých farmářů, jehož vliv vede k mylnému vnímání konfliktu mezi farmáři a ekology?
+                <div style="margin-top: 6px;">
+                  <label><input type="radio" name="prov_q1" value="A"> Spotřebitelé požadují levné potraviny</label><br>
+                  <label><input type="radio" name="prov_q1" value="B"> Vlády a instituce Evropské unie</label><br>
+                  <label><input type="radio" name="prov_q1" value="C"> Velký zemědělský průmysl (agroprůmysl)</label>
+                </div>
+              </li>
+              <li style="margin-bottom: 12px;">
+                Jaké řešení navrhuje Jean Matthieu Thévenot, aby evropští farmáři čelili neférové konkurenci dovozu ze zemí s nižšími ekologickými standardy?
+                <div style="margin-top: 6px;">
+                  <label><input type="radio" name="prov_q2" value="A"> Zvýšení dotací pro evropské farmáře, aby mohli konkurovat nižšími cenami</label><br>
+                  <label><input type="radio" name="prov_q2" value="B"> Zákaz dovozu, který nesplňuje evropské standardy, a stanovení minimálních cen</label><br>
+                  <label><input type="radio" name="prov_q2" value="C"> Snížení evropských ekologických standardů na úroveň mezinárodních konkurentů</label>
+                </div>
+              </li>
+              <li style="margin-bottom: 12px;">
+                Jaký je podle Jeana Matthieu Thévenota fundamentální princip, který by měl platit pro potraviny v rámci mezinárodního obchodu?
+                <div style="margin-top: 6px;">
+                  <label><input type="radio" name="prov_q3" value="A"> Potraviny by měly být co nejlevnější, aby byly dostupné pro všechny, bez ohledu na výrobní náklady</label><br>
+                  <label><input type="radio" name="prov_q3" value="B"> Ceny potravin by měly být určovány výhradně poptávkou velkých supermarketových řetězců</label><br>
+                  <label><input type="radio" name="prov_q3" value="C"> Hlavním cílem každého farmáře by měl být primárně export na globální trh</label><br>
+                  <label><input type="radio" name="prov_q3" value="D"> Potraviny by neměly být považovány za běžnou komoditu a neměly by být součástí dohod o volném obchodu</label>
+                </div>
+              </li>
+            </ol>
+
+            <div id="provenceQuizResult" style="margin-top: 10px;"></div>
+
+            <button class="button" onclick="evaluateProvenceQuiz()">
+              Vyhodnotit kvíz
+            </button>
+          </div>
+        `;
+      }
+
+      if (minigame.type === 'greenwashing_quiz') {
+        return `
+          <div class="minigame-container">
+            <h3>🎮 Minihra: Greenwashing – slib, nebo skutečná změna?</h3>
+            <p style="font-size: 14px; margin: 10px 0;">
+              U každého tvrzení vyber, zda jde spíš o <strong>skutečný závazek</strong>, nebo o <strong>greenwashing / planý slib</strong>.
+            </p>
+
+            <div style="font-size: 14px; line-height: 1.7;">
+              <p><strong>1.</strong> „Do roku 2050 budeme <em>net-zero</em>. Nepotřebujeme teď snižovat těžbu ropy, budeme investovat do offsetů a inovací.“<br>
+                <label><input type="radio" name="gw_q1" value="real"> Skutečný závazek</label>
+                <label style="margin-left: 10px;"><input type="radio" name="gw_q1" value="wash"> Greenwashing / planý slib</label>
+              </p>
+              <p><strong>2.</strong> „Od příštího roku zveřejníme kompletní emise <em>Scope 1, 2 i 3</em> a jasný plán, jak je do roku 2030 snížit o 50 %.“<br>
+                <label><input type="radio" name="gw_q2" value="real"> Skutečný závazek</label>
+                <label style="margin-left: 10px;"><input type="radio" name="gw_q2" value="wash"> Greenwashing / planý slib</label>
+              </p>
+              <p><strong>3.</strong> „Jsme <em>uhlíkově neutrální</em>, protože kupujeme levné offsety na výsadbu stromů, zatímco otevíráme nové ropné vrty.“<br>
+                <label><input type="radio" name="gw_q3" value="real"> Skutečný závazek</label>
+                <label style="margin-left: 10px;"><input type="radio" name="gw_q3" value="wash"> Greenwashing / planý slib</label>
+              </p>
+              <p><strong>4.</strong> „Zavíráme uhelnou elektrárnu o 10 let dříve a nahrazujeme ji obnovitelnými zdroji. Detaily projektu jsou veřejné a kontrolované nezávislými experty.“<br>
+                <label><input type="radio" name="gw_q4" value="real"> Skutečný závazek</label>
+                <label style="margin-left: 10px;"><input type="radio" name="gw_q4" value="wash"> Greenwashing / planý slib</label>
+              </p>
+            </div>
+
+            <div id="greenwashResult" style="margin-top: 10px;"></div>
+
+            <button class="button" onclick="evaluateGreenwashingQuiz()">
+              Vyhodnotit greenwashing
+            </button>
+          </div>
+        `;
+      }
+      
+      if (minigame.type === 'simple_quiz') {
+        return `
+          <div class="minigame-container">
+            <h3>🎮 Minihra: Zamysli se nad příběhem</h3>
+            <p style="font-size: 14px; margin: 10px 0;">
+              Přečti si příběh a zkus si odpovědět: Kdo měl moc rozhodnout? Co šlo udělat jinak? Koho se to týkalo nejvíc?
+            </p>
+            <p style="font-size: 13px; opacity: 0.8;">
+              (Tady můžeš později doplnit konkrétní kvízové otázky pro každý fragment.)
+            </p>
+          </div>
+        `;
+      }
+
+      return '';
+    }
+
+    // SYSTEM CHANGE LOGIKA
+    function initSystemChange() {
+      const fragment = FRAGMENTS.find(f => f.id === currentFragment.id);
+      if (!fragment || !fragment.minigame || fragment.minigame.type !== 'system_change') return;
+
+      const mg = fragment.minigame;
+      systemState = {
+        round: 1,
+        year: mg.startYear,
+        budget: mg.budget,
+        systems: JSON.parse(JSON.stringify(mg.systems)),
+        selectedPolicies: [],
+        appliedPolicies: [],
+        availablePolicies: mg.policies.filter(p => !p.unlock),
+        gameOver: false
+      };
+
+      updateSystemDashboard();
+      renderSystemPolicies();
+      updateSystemInfo();
+    }
+
+    function updateSystemDashboard() {
+      if (!systemState) return;
+      
+      const dashboard = document.getElementById('systemDashboard');
+      if (!dashboard) return;
+
+      dashboard.innerHTML = Object.entries(systemState.systems).map(([key, system]) => {
+        const metrics = system.metrics;
+        const targets = system.targets;
+        
+        let criticalCount = 0;
+        let excellentCount = 0;
+        
+        Object.entries(targets).forEach(([metric, target]) => {
+          const value = metrics[metric];
+          const [op, threshold] = [target.includes('≥') ? '≥' : '≤', parseFloat(target.replace(/[≥≤]/g, ''))];
+          
+          if (op === '≥' && value < threshold) criticalCount++;
+          if (op === '≤' && value > threshold) criticalCount++;
+          if (op === '≥' && value >= threshold) excellentCount++;
+          if (op === '≤' && value <= threshold) excellentCount++;
+        });
+
+        const cardClass = criticalCount > 0 ? 'critical' : excellentCount === Object.keys(targets).length ? 'excellent' : '';
+
+        return `
+          <div class="system-card ${cardClass}">
+            <div class="system-header">
+              <span>${system.name}</span>
+            </div>
+            ${Object.entries(metrics).map(([metric, value]) => {
+              const target = targets[metric];
+              let status = 'neutral';
+              if (target) {
+                const [op, threshold] = [target.includes('≥') ? '≥' : '≤', parseFloat(target.replace(/[≥≤]/g, ''))];
+                if (op === '≥') status = value >= threshold ? 'good' : 'bad';
+                if (op === '≤') status = value <= threshold ? 'good' : 'bad';
+              }
+              return `
+                <div class="metric-row">
+                  <span>${getMetricLabel(metric)}:</span>
+                  <span class="metric-value ${status}">${formatMetricValue(metric, value)} ${target ? `(cíl: ${target})` : ''}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getMetricLabel(metric) {
+      const labels = {
+        gdp: 'HDP', unemployment: 'Nezaměst.', growth: 'Růst',
+        emissions: 'Emise', temperature: 'Teplota', disasters: 'Katastrofy',
+        inequality: 'Nerovnost', happiness: 'Spokojenost', education: 'Vzdělání',
+        renewable: 'Obnovitelné', stability: 'Stabilita', cost: 'Náklady',
+        production: 'Produkce', price: 'Cena', security: 'Bezpečnost',
+        biodiversity: 'Biodiverzita', health: 'Zdraví', protected: 'Chráněno'
+      };
+      return labels[metric] || metric;
+    }
+
+    function formatMetricValue(metric, value) {
+      if (metric === 'temperature') return `${value.toFixed(1)}°C`;
+      if (['renewable', 'emissions', 'inequality', 'happiness', 'education', 'stability', 'protected'].includes(metric)) {
+        return `${Math.round(value)}%`;
+      }
+      if (metric === 'growth') return `${value.toFixed(1)}%`;
+      return Math.round(value);
+    }
+
+    function renderSystemPolicies() {
+      if (!systemState) return;
+      
+      const grid = document.getElementById('systemPoliciesGrid');
+      if (!grid) return;
+
+      const fragment = FRAGMENTS.find(f => f.id === currentFragment.id);
+      const allPolicies = fragment.minigame.policies;
+
+      let displayPolicies = systemState.availablePolicies;
+      if (currentFilter !== 'all') {
+        displayPolicies = displayPolicies.filter(p => p.category === currentFilter);
+      }
+
+      grid.innerHTML = displayPolicies.map(policy => {
+        const isSelected = systemState.selectedPolicies.includes(policy.id);
+        const isApplied = systemState.appliedPolicies.includes(policy.id);
+        const hasSynergy = systemState.selectedPolicies.some(selectedId => {
+          const selectedPolicy = allPolicies.find(p => p.id === selectedId);
+          return selectedPolicy?.synergy?.includes(policy.id) || policy.synergy?.includes(selectedId);
+        });
+        const hasConflict = systemState.selectedPolicies.some(selectedId => {
+          const selectedPolicy = allPolicies.find(p => p.id === selectedId);
+          return selectedPolicy?.conflict?.includes(policy.id);
+        });
+
+        const classes = ['policy-card'];
+        if (isSelected) classes.push('selected');
+        if (isApplied) classes.push('disabled');
+        if (hasConflict) classes.push('disabled');
+        if (hasSynergy && !isSelected) classes.push('synergy-highlight');
+
+        return `
+          <div class="${classes.join(' ')}" onclick="toggleSystemPolicy(${policy.id})" data-policy-id="${policy.id}">
+            <div class="policy-header">
+              <div class="policy-icon">${policy.icon}</div>
+              <div class="policy-name">${policy.name}</div>
+            </div>
+            <div class="policy-desc">${policy.desc}</div>
+            <div class="policy-effects">
+              <span class="effect-badge ${policy.cost > 0 ? 'positive' : policy.cost < 0 ? 'negative' : 'neutral'}">
+                ${policy.cost > 0 ? '+' : ''}${policy.cost} mld €
+              </span>
+              ${renderPolicyEffects(policy.effects)}
+            </div>
+            ${isApplied ? '<div style="margin-top: 8px; color: #666; font-size: 11px;">✓ Již aktivní</div>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderPolicyEffects(effects) {
+      let badges = [];
+      Object.entries(effects).forEach(([system, changes]) => {
+        Object.entries(changes).forEach(([metric, value]) => {
+          if (value !== 0) {
+            const isPositive = (metric === 'emissions' || metric === 'inequality' || metric === 'unemployment' || metric === 'disasters' || metric === 'price' || metric === 'cost') ? value < 0 : value > 0;
+            badges.push(`
+              <span class="effect-badge ${isPositive ? 'positive' : 'negative'}">
+                ${value > 0 ? '+' : ''}${formatMetricValue(metric, value)} ${getMetricLabel(metric)}
+              </span>
+            `);
+          }
+        });
+      });
+      return badges.join('');
+    }
+
+    window.toggleSystemPolicy = function(policyId) {
+      if (!systemState || systemState.gameOver) return;
+
+      const fragment = FRAGMENTS.find(f => f.id === currentFragment.id);
+      const allPolicies = fragment.minigame.policies;
+      const policy = allPolicies.find(p => p.id === policyId);
+
+      if (systemState.appliedPolicies.includes(policyId)) return;
+
+      const hasConflict = systemState.selectedPolicies.some(selectedId => {
+        const selectedPolicy = allPolicies.find(p => p.id === selectedId);
+        return selectedPolicy?.conflict?.includes(policyId);
+      });
+
+      if (hasConflict) return;
+
+      const index = systemState.selectedPolicies.indexOf(policyId);
+      if (index > -1) {
+        systemState.selectedPolicies.splice(index, 1);
+      } else {
+        systemState.selectedPolicies.push(policyId);
+      }
+
+      renderSystemPolicies();
+    };
+
+    window.filterPolicies = function(category) {
+      currentFilter = category;
+      
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.cat === category) {
+          btn.classList.add('active');
+        }
+      });
+
+      renderSystemPolicies();
+    };
+
+    window.advanceSystemRound = function() {
+      if (!systemState || systemState.gameOver) return;
+
+      const fragment = FRAGMENTS.find(f => f.id === currentFragment.id);
+      const allPolicies = fragment.minigame.policies;
+
+      let totalCost = 0;
+      systemState.selectedPolicies.forEach(policyId => {
+        const policy = allPolicies.find(p => p.id === policyId);
+        totalCost += policy.cost;
+      });
+
+      if (systemState.budget + totalCost < 0) {
+        showSystemMessage("💸 ROZPOČET NENÍ DOSTATEČNÝ! Vyberte levnější politiky.", "error");
+        return;
+      }
+
+      systemState.budget += totalCost;
+
+      systemState.selectedPolicies.forEach(policyId => {
+        const policy = allPolicies.find(p => p.id === policyId);
+        applyPolicyEffects(policy);
+        systemState.appliedPolicies.push(policyId);
+      });
+
+      systemState.selectedPolicies = [];
+
+      const crisis = fragment.minigame.crises.find(c => c.round === systemState.round);
+      if (crisis) {
+        showCrisis(crisis);
+        applyCrisisEffects(crisis);
+      }
+
+      systemState.round++;
+      systemState.year += 5;
+
+      allPolicies.forEach(policy => {
+        if (policy.unlock && systemState.round >= policy.unlock) {
+          if (!systemState.availablePolicies.find(p => p.id === policy.id) && !systemState.appliedPolicies.includes(policy.id)) {
+            systemState.availablePolicies.push(policy);
+          }
+        }
+      });
+
+      updateSystemDashboard();
+      renderSystemPolicies();
+      updateSystemInfo();
+
+      if (systemState.round > 5) {
+        checkVictory(fragment.minigame);
+      }
+    };
+
+    function applyPolicyEffects(policy) {
+      Object.entries(policy.effects).forEach(([systemKey, changes]) => {
+        if (systemState.systems[systemKey]) {
+          Object.entries(changes).forEach(([metric, value]) => {
+            systemState.systems[systemKey].metrics[metric] += value;
+          });
+        }
+      });
+    }
+
+    function applyCrisisEffects(crisis) {
+      Object.entries(crisis.effects).forEach(([systemKey, changes]) => {
+        if (systemState.systems[systemKey]) {
+          Object.entries(changes).forEach(([metric, value]) => {
+            systemState.systems[systemKey].metrics[metric] += value;
+          });
+        }
+      });
+    }
+
+    function showCrisis(crisis) {
+      const container = document.getElementById('crisisContainer');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="crisis-modal">
+          <h3 style="margin: 0 0 15px 0;">${crisis.name}</h3>
+          <p style="font-size: 14px;">${crisis.desc}</p>
+          <p style="font-size: 13px; margin-top: 10px; opacity: 0.9;">Dopady byly automaticky aplikovány.</p>
+        </div>
+      `;
+
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 4000);
+    }
+
+    function checkVictory(minigame) {
+      let achievedTargets = 0;
+      let totalTargets = 0;
+
+      Object.entries(systemState.systems).forEach(([key, system]) => {
+        Object.entries(system.targets).forEach(([metric, target]) => {
+          totalTargets++;
+          const value = system.metrics[metric];
+          const [op, threshold] = [target.includes('≥') ? '≥' : '≤', parseFloat(target.replace(/[≥≤]/g, ''))];
+          
+          if ((op === '≥' && value >= threshold) || (op === '≤' && value <= threshold)) {
+            achievedTargets++;
+          }
+        });
+      });
+
+      const percentage = (achievedTargets / totalTargets) * 100;
+
+      const resultContainer = document.getElementById('systemResult');
+      if (!resultContainer) return;
+
+      if (percentage >= 90) {
+        resultContainer.innerHTML = `
+          <div class="victory-box">
+            <h2 style="color: #00ff88; margin: 0 0 15px 0;">✅ SYSTÉMOVÁ TRANSFORMACE ÚSPĚŠNÁ!</h2>
+            <p style="font-size: 18px;">Dosaženo ${achievedTargets}/${totalTargets} cílů (${percentage.toFixed(0)} %)</p>
+            <div style="margin-top: 20px; padding: 20px; background: rgba(0,255,136,0.2); border-radius: 8px;">
+              <strong>Dopad na rok 2100:</strong><br>
+              ✅ Systémová změna proběhla úspěšně<br>
+              ✅ Klima stabilizováno, společnost spravedlivá<br>
+              ✅ Ekonomika udržitelná, ekosystémy zdravé<br>
+              ✅ Civilizace zachráněna
+            </div>
+          </div>
+        `;
+      } else if (percentage >= 70) {
+        resultContainer.innerHTML = `
+          <div style="background: linear-gradient(135deg, rgba(255,165,0,0.3), rgba(255,200,0,0.3)); border: 3px solid #ffa500; border-radius: 12px; padding: 30px; margin: 20px 0; text-align: center;">
+            <h2 style="color: #ffa500; margin: 0 0 15px 0;">⚠️ ČÁSTEČNÝ ÚSPĚCH</h2>
+            <p style="font-size: 18px;">Dosaženo ${achievedTargets}/${totalTargets} cílů (${percentage.toFixed(0)} %)</p>
+            <div style="margin-top: 20px; padding: 20px; background: rgba(255,165,0,0.2); border-radius: 8px;">
+              <strong>Dopad na rok 2100:</strong><br>
+              🔥 Některé systémy stabilizovány, jiné ne<br>
+              ⚠️ Středně závažné problémy přetrvávají<br>
+              💰 Vysoké náklady na adaptaci
+            </div>
+          </div>
+        `;
+      } else {
+        resultContainer.innerHTML = `
+          <div class="game-over-box">
+            <h2 style="color: #ff4444; margin: 0 0 15px 0;">💀 SYSTÉMOVÝ KOLAPS</h2>
+            <p style="font-size: 18px;">Dosaženo pouze ${achievedTargets}/${totalTargets} cílů (${percentage.toFixed(0)} %)</p>
+            <div style="margin-top: 20px; padding: 20px; background: rgba(255,68,68,0.2); border-radius: 8px;">
+              <strong>Dopad na rok 2100:</strong><br>
+              🔥 Systémy selhaly napříč celou civilizací<br>
+              💀 Kaskádový kolaps společnosti<br>
+              🌍 Planeta neobyvatelná
+            </div>
+          </div>
+        `;
+      }
+
+      systemState.gameOver = true;
+      const btn = document.getElementById('systemAdvanceBtn');
+      if (btn) btn.disabled = true;
+    }
+
+    function updateSystemInfo() {
+      const info = document.getElementById('systemRoundInfo');
+      if (info && systemState) {
+        info.textContent = `📅 ROK ${systemState.year} | KOLO ${systemState.round}/5 | Rozpočet: ${Math.round(systemState.budget)} mld €`;
+      }
+    }
+
+    function showSystemMessage(msg, type) {
+      const container = document.getElementById('crisisContainer');
+      if (!container) return;
+
+      const color = type === 'error' ? '#ff4444' : '#00ff88';
+      container.innerHTML = `
+        <div style="background: rgba(255,68,68,0.2); border: 2px solid ${color}; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+          <p style="font-size: 16px; margin: 0;">${msg}</p>
+        </div>
+      `;
+
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 3000);
+    }
+
+    // === MINIHRY MIMO FRAGMENTY ===
+
+    // 1) FACT-CHECKER 2125
+    window.openFactChecker = function() {
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h2>🧠 Fact-checker 2125</h2>
+          <p style="font-size: 15px; line-height: 1.7; margin-bottom: 20px;">
+            V roce 2025 proudily sítěmi tisíce výroků o klimatu. Tvým úkolem je označit, zda jde o
+            <strong>vědecky podložený výrok</strong> (PRAVDA), nebo o <strong>dezinformaci / manipulaci</strong>.
+          </p>
+          ${FACT_CHECK_QUESTIONS.map((q, idx) => `
+            <div style="margin-bottom: 18px; padding: 12px; background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid rgba(0,255,136,0.2);">
+              <div style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">
+                ${idx + 1}. ${q.statement}
+              </div>
+              <div style="display:flex; gap:15px; flex-wrap:wrap; font-size: 14px;">
+                <label>
+                  <input type="radio" name="fc_q${q.id}" value="truth" style="margin-right:6px;">
+                  PRAVDA (v souladu s vědeckým konsenzem)
+                </label>
+                <label>
+                  <input type="radio" name="fc_q${q.id}" value="misinfo" style="margin-right:6px;">
+                  DEZINFORMACE / MANIPULACE
+                </label>
+              </div>
+            </div>
+          `).join('')}
+          <div id="factCheckerResult" style="margin-top: 20px;"></div>
+          <div style="margin-top: 10px;">
+            <button class="button" onclick="evaluateFactChecker()">Vyhodnotit kvíz</button>
+            <button class="button button-secondary" onclick="closeModal()">Zavřít</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('modalContainer').appendChild(modal);
+    };
+
+    window.evaluateFactChecker = function() {
+      let correct = 0;
+      let total = FACT_CHECK_QUESTIONS.length;
+      let answered = 0;
+      let details = '';
+
+      FACT_CHECK_QUESTIONS.forEach(q => {
+        const selected = document.querySelector(`input[name="fc_q${q.id}"]:checked`);
+        if (selected) {
+          answered++;
+          const isCorrect = selected.value === q.correct;
+          if (isCorrect) correct++;
+          details += `
+            <div style="margin-bottom: 12px; font-size: 14px;">
+              <strong>${isCorrect ? '✅ Správně:' : '❌ Nesprávně:'}</strong>
+              <span> ${q.statement}</span>
+              <br>
+              <span style="opacity:0.9;">${q.explanation}</span>
+            </div>
+          `;
+        } else {
+          details += `
+            <div style="margin-bottom: 12px; font-size: 14px;">
+              <strong>⚠️ Nezodpovězeno:</strong> ${q.statement}
+            </div>
+          `;
+        }
+      });
+
+      const resultDiv = document.getElementById('factCheckerResult');
+      if (!resultDiv) return;
+
+      let scoreColor = '#ffa500';
+      if (correct / total >= 0.75) scoreColor = '#00ff88';
+      if (correct / total <= 0.4) scoreColor = '#ff4444';
+
+      resultDiv.innerHTML = `
+        <div style="background: rgba(0,0,0,0.5); border-radius: 8px; padding: 16px; border: 1px solid rgba(0,255,136,0.3);">
+          <p style="font-size: 15px; margin-bottom: 10px;">
+            Odpověděli jste na ${answered}/${total} výroků. 
+            <strong style="color:${scoreColor};">Správně: ${correct}/${total}</strong>
+          </p>
+          <div style="max-height: 260px; overflow-y:auto; padding-right:6px;">
+            ${details}
+          </div>
+          <p style="font-size: 13px; opacity: 0.8; margin-top: 10px;">
+            🧩 V roce 2125 jsou mediální gramotnost a fact-checking jednou z klíčových dovedností přeživších.
+          </p>
+        </div>
+      `;
+    };
+
+    // 2) KALKULAČKA OSOBNÍ UHLÍKOVÉ STOPY
+    window.openCarbonCalculator = function() {
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h2>🌿 Kalkulačka osobní uhlíkové stopy</h2>
+          <p style="font-size: 15px; line-height: 1.7; margin-bottom: 20px;">
+            Tohle je <strong>zjednodušený odhad</strong>, který ukazuje, kde mají jednotlivé volby největší dopad.
+            Neslouží jako přesný vědecký nástroj, ale jako pomůcka k zamyšlení.
+          </p>
+          <div class="cf-grid">
+            <div class="cf-question">
+              <label>✈️ Letecká doprava</label>
+              <select id="cf_flights">
+                <option value="0">Nelétám / jednou za mnoho let</option>
+                <option value="1.5">1 krátký let ročně (Evropa)</option>
+                <option value="3">2–3 lety ročně (mix Evropa / dálka)</option>
+                <option value="5">Často létám (4+ letů ročně)</option>
+              </select>
+              <div class="cf-note">Lety patří mezi největší osobní zdroje emisí.</div>
+            </div>
+            <div class="cf-question">
+              <label>🚗 Auto a doprava</label>
+              <select id="cf_car">
+                <option value="0.3">Nemám auto, jezdím hlavně pěšky/MHD</option>
+                <option value="1.5">Auto jen občas (do 5 000 km/rok)</option>
+                <option value="3">Auto často (5–15 000 km/rok)</option>
+                <option value="5">Auto denně (15 000+ km/rok, spalovák)</option>
+              </select>
+              <div class="cf-note">Rozdíl mezi spalovákem a hromadnou dopravou je obrovský.</div>
+            </div>
+            <div class="cf-question">
+              <label>🍽️ Strava</label>
+              <select id="cf_food">
+                <option value="1">Převážně rostlinná strava</option>
+                <option value="1.8">Vegetarián/ka</option>
+                <option value="2.5">Maso cca 1× denně</option>
+                <option value="3.5">Maso víckrát denně</option>
+              </select>
+              <div class="cf-note">Méně masa = nižší emise, hlavně u hovězího.</div>
+            </div>
+            <div class="cf-question">
+              <label>🏠 Bydlení a vytápění</label>
+              <select id="cf_home">
+                <option value="1">Byt v zatepleném domě, OZE / tepelné čerpadlo</option>
+                <option value="2">Byt, plyn / centrální topení</option>
+                <option value="3">Rodinný dům, plyn</option>
+                <option value="4">Rodinný dům, uhlí / starý kotel</option>
+              </select>
+              <div class="cf-note">Energetická náročnost budov a zdroj tepla jsou zásadní.</div>
+            </div>
+            <div class="cf-question">
+              <label>🛒 Spotřeba věcí</label>
+              <select id="cf_goods">
+                <option value="0.8">Minimalista – málo nákupů, opravuji / second hand</option>
+                <option value="1.5">Průměrná spotřeba</option>
+                <option value="3">Hodně nakupuji (elektronika, móda, gadgety)</option>
+              </select>
+              <div class="cf-note">Každý nový produkt má emise z výroby a dopravy.</div>
+            </div>
+          </div>
+          <div id="carbonResult" style="margin-top: 20px;"></div>
+          <div style="margin-top: 10px;">
+            <button class="button" onclick="calculateCarbonFootprint()">Spočítat</button>
+            <button class="button button-secondary" onclick="closeModal()">Zavřít</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('modalContainer').appendChild(modal);
+    };
+
+    window.calculateCarbonFootprint = function() {
+      function val(id) {
+        const el = document.getElementById(id);
+        return el ? parseFloat(el.value || '0') : 0;
+      }
+
+      const flights = val('cf_flights');
+      const car = val('cf_car');
+      const food = val('cf_food');
+      const home = val('cf_home');
+      const goods = val('cf_goods');
+
+      const total = +(flights + car + food + home + goods).toFixed(1);
+
+      let level = '';
+      let msg = '';
+      if (total < 3) {
+        level = 'nižší než průměr';
+        msg = 'Tvoje uhlíková stopa je relativně nízká. I tak má smysl zaměřit se na velké položky (lety, auto) a svůj příklad využít k inspiraci ostatních.';
+      } else if (total < 7) {
+        level = 'v blízkosti průměru v EU';
+        msg = 'Jsi někde kolem dnešního evropského průměru. Největší potenciál ke snížení bývá u dopravy (auto, lety) a u bydlení (zateplení, zdroj tepla).';
+      } else {
+        level = 'výrazně nad průměrem';
+        msg = 'Tvoje stopa je výrazně vyšší. Pokud by takhle žil každý, potřebovali bychom několik planet. Největší efekt přinese méně létání, změny v dopravě a v bydlení.';
+      }
+
+      const resultDiv = document.getElementById('carbonResult');
+      if (!resultDiv) return;
+
+      resultDiv.innerHTML = `
+        <div style="background: rgba(0,0,0,0.5); border-radius: 8px; padding: 16px; border: 1px solid rgba(0,255,136,0.3);">
+          <p style="font-size: 16px; margin-bottom: 8px;">
+            Tvůj hrubý odhad osobní uhlíkové stopy je
+            <strong>${total} t CO₂e / rok</strong>.
+          </p>
+          <p style="font-size: 15px; margin-bottom: 10px;">
+            To je <strong>${level}</strong>.
+          </p>
+          <ul style="font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
+            <li>✈️ Letecká doprava: ~${flights} t</li>
+            <li>🚗 Doprava autem: ~${car} t</li>
+            <li>🍽️ Strava: ~${food} t</li>
+            <li>🏠 Bydlení: ~${home} t</li>
+            <li>🛒 Spotřeba věcí: ~${goods} t</li>
+          </ul>
+          <p style="font-size: 14px; margin-top: 10px;">
+            ${msg}
+          </p>
+          <p style="font-size: 12px; opacity: 0.75; margin-top: 8px;">
+            📌 Poznámka: Jde o hrubý model pro edukaci, skutečné hodnoty závisí na mnoha detailech (konkrétní typy aut, letů, domu, energetického mixu atd.).
+          </p>
+        </div>
+      `;
+    };
+
+    // Provence quiz vyhodnocení
+    window.evaluateProvenceQuiz = function() {
+      const answers = {
+        prov_q1: 'C',
+        prov_q2: 'B',
+        prov_q3: 'D'
+      };
+      let correct = 0;
+      let total = 3;
+      let answered = 0;
+
+      Object.keys(answers).forEach(key => {
+        const selected = document.querySelector(`input[name="${key}"]:checked`);
+        if (selected) {
+          answered++;
+          if (selected.value === answers[key]) correct++;
+        }
+      });
+
+      const resultDiv = document.getElementById('provenceQuizResult');
+      if (!resultDiv) return;
+
+      if (answered < total) {
+        resultDiv.innerHTML = `
+          <p style="color:#ffa500; font-size:14px; margin-top:8px;">
+            ⚠️ Neodpověděl/a jsi na všechny otázky (${answered}/${total}). Zkus to doplnit.
+          </p>
+        `;
+        return;
+      }
+
+      const ok = correct === total;
+      resultDiv.innerHTML = `
+        <p style="font-size:14px; margin-top:8px; color:${ok ? '#00ff88' : '#ffa500'};">
+          ${ok 
+            ? '✅ Výborně! Všechny odpovědi máš správně – dobře rozumíš tomu, co Jean Matthieu Thévenot říká o agroprůmyslu a pravidlech obchodu s potravinami.' 
+            : `ℹ️ Správných odpovědí: ${correct}/${total}. Zkus se k záznamu ještě vrátit a zamyslet se nad tím, kdo má v systému největší sílu a jak ji používá.`}
+        </p>
+      `;
+    };
+
+    // Greenwashing minihra vyhodnocení
+    window.evaluateGreenwashingQuiz = function() {
+      const correctMap = {
+        gw_q1: 'wash',
+        gw_q2: 'real',
+        gw_q3: 'wash',
+        gw_q4: 'real'
+      };
+      let correct = 0;
+      let total = 4;
+      let answered = 0;
+
+      Object.keys(correctMap).forEach(key => {
+        const selected = document.querySelector(`input[name="${key}"]:checked`);
+        if (selected) {
+          answered++;
+          if (selected.value === correctMap[key]) correct++;
+        }
+      });
+
+      const resultDiv = document.getElementById('greenwashResult');
+      if (!resultDiv) return;
+
+      if (answered < total) {
+        resultDiv.innerHTML = `
+          <p style="color:#ffa500; font-size:14px; margin-top:8px;">
+            ⚠️ Neodpověděl/a jsi na všechna tvrzení (${answered}/${total}). Zkus nejdřív doplnit zbytek.
+          </p>
+        `;
+        return;
+      }
+
+      let msg = '';
+      if (correct === total) {
+        msg = "✅ Perfektní! Umíš dobře rozlišit mezi marketingem a skutečnou změnou. V reálném světě je tohle skill na úrovni superhrdiny.";
+      } else if (correct >= 2) {
+        msg = `ℹ️ Máš ${correct}/${total} správně. Část greenwashingu jsi rozpozněl/a, ale některé triky jsou fakt rafinované – vždy hledej konkrétní činy, ne jen hezká slova.`;
+      } else {
+        msg = `❌ Pouze ${correct}/${total} správně. Ukazuje to, jak snadno se dá na greenwashing naletět – proto firmy tak rády používají vágní sliby typu „do roku 2050“ bez detailů.`;
+      }
+
+      resultDiv.innerHTML = `
+        <p style="font-size:14px; margin-top:8px; color:${correct === total ? '#00ff88' : (correct >= 2 ? '#ffa500' : '#ff4444')}">
+          ${msg}
+        </p>
+        <p style="font-size:12px; opacity:0.8; margin-top:4px;">
+          💡 Tip: Skutečný závazek má <strong>konkrétní čísla, termíny, mezicíle, transparentní reportování</strong> a je ověřitelný nezávislými experty. Greenwashing spoléhá na vágní pojmy a posunutí pozornosti.
+        </p>
+      `;
+    };
+
+    window.collectCurrentFragment = function() {
+      if (currentFragment) {
+        const fragmentInList = fragments.find(f => f.id === currentFragment.id);
+        const fragmentData = FRAGMENTS.find(f => f.id === currentFragment.id);
+        
+        if (fragmentInList) {
+          fragmentInList.collected = true;
+          
+          const fragmentValue = fragmentData.fragmentValue || 1;
+          for (let i = 0; i < fragmentValue; i++) {
+            collectedFragments.push(fragmentInList);
+          }
+          
+          updateFragmentCounter();
+          
+          closeModal();
+          
+          if (collectedFragments.length >= 14) {
+            setTimeout(() => showFinalModal(), 500);
+          }
+        }
+      }
+    };
+
+    function showFinalModal() {
+      const config = window.elementSdk?.config || defaultConfig;
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h2>🌍 MISE DOKONČENA</h2>
+          <p style="font-size: 18px; line-height: 1.8; margin: 20px 0;">${config.final_message}</p>
+          
+          <h3 style="margin-top: 30px;">📊 Statistiky katastrofy:</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+            <div style="background: rgba(255,68,68,0.2); padding: 20px; border-radius: 8px; border: 2px solid #ff4444;">
+              <div style="font-size: 32px; font-weight: bold;">+2.8 °C</div>
+              <div>Globální oteplení</div>
+            </div>
+            <div style="background: rgba(255,68,68,0.2); padding: 20px; border-radius: 8px; border: 2px solid #ff4444;">
+              <div style="font-size: 32px; font-weight: bold;">2.1 MLD</div>
+              <div>Klimatických uprchlíků</div>
+            </div>
+            <div style="background: rgba(255,68,68,0.2); padding: 20px; border-radius: 8px; border: 2px solid #ff4444;">
+              <div style="font-size: 32px; font-weight: bold;">35 %</div>
+              <div>Vyhynulých druhů</div>
+            </div>
+            <div style="background: rgba(255,68,68,0.2); padding: 20px; border-radius: 8px; border: 2px solid #ff4444;">
+              <div style="font-size: 32px; font-weight: bold;">+1.2 m</div>
+              <div>Nárůst moří</div>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 30px;">⏱️ Časová osa katastrofy:</h3>
+          <div style="background: rgba(0,136,255,0.1); padding: 20px; border-radius: 8px; border-left: 4px solid #0088ff; margin: 20px 0;">
+            <p><strong>2025–2030:</strong> Emise rostly, sliby nedodrženy</p>
+            <p><strong>2035–2045:</strong> První tipping pointy překročeny</p>
+            <p><strong>2050–2065:</strong> Masivní migrace, první klimatické války</p>
+            <p><strong>2070–2085:</strong> Kolaps obchodu, záplavy měst, hladomory</p>
+            <p><strong>2090–2100:</strong> Svět nepoznatelný, rozdělená Evropa</p>
+          </div>
+
+          <h3 style="margin-top: 30px;">📢 Co můžete udělat v roce 2025:</h3>
+          <div style="background: rgba(0,255,136,0.1); padding: 20px; border-radius: 8px; border: 2px solid #00ff88; margin: 20px 0; text-align: left;">
+            <p>✓ Volit správné politiky a politiky</p>
+            <p>✓ Požadovat systémové změny</p>
+            <p>✓ Podporovat obnovitelné zdroje</p>
+            <p>✓ Mluvit o klimatu s ostatními</p>
+            <p>✓ Žalovat korporace za škody</p>
+            <p>✓ Bojovat za zelenou infrastrukturu</p>
+          </div>
+
+          <div style="background: rgba(255,68,68,0.3); padding: 25px; border-radius: 8px; border: 3px solid #ff4444; margin: 30px 0; text-align: center; animation: pulse 2s infinite;">
+            <h2 style="color: #ff4444; margin: 0;">💀 ZPRÁVA PRO ROK 2025</h2>
+            <p style="font-size: 18px; margin-top: 15px;">Ještě máte čas. Okno pro akci je stále otevřené.</p>
+            <p style="font-size: 20px; font-weight: bold; color: #00ff88;">⚡ JEDNEJTE TEĎ ⚡</p>
+          </div>
+
+          <button class="button" onclick="location.reload()">🔄 Restartovat misi</button>
+        </div>
+      `;
+      document.getElementById('modalContainer').appendChild(modal);
+    }
+
+    window.closeModal = function() {
+      const modalContainer = document.getElementById('modalContainer');
+      modalContainer.innerHTML = '';
+      currentFragment = null;
+      systemState = null;
+      currentFilter = 'all';
+    };
+
+    function updateFragmentCounter() {
+      const counter = document.getElementById('fragmentCount');
+      counter.textContent = `Fragmenty: ${collectedFragments.length}/${FRAGMENTS.length}`;
+    }
+
+    function getNearestFragment() {
+      let nearest = null;
+      let minDist = Infinity;
+
+      fragments.forEach(fragment => {
+        if (fragment.collected) return;
+        
+        const dx = fragment.x - player.x;
+        const dy = fragment.y - player.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = { ...fragment, distance: dist };
+        }
+      });
+
+      return nearest;
+    }
+
+    function update(dt) {
+      if (gameState !== 'playing') return;
+
+      const speed = player.speed * dt;
+
+      let moveX = 0;
+      let moveY = 0;
+
+      if (keys['w'] || keys['arrowup']) moveY -= speed;
+      if (keys['s'] || keys['arrowdown']) moveY += speed;
+      if (keys['a'] || keys['arrowleft']) moveX -= speed;
+      if (keys['d'] || keys['arrowright']) moveX += speed;
+
+      if (moveX !== 0 && moveY !== 0) {
+        moveX *= 0.707;
+        moveY *= 0.707;
+      }
+
+      player.x += moveX;
+      player.y += moveY;
+
+      player.x = Math.max(player.size, Math.min(WORLD_WIDTH - player.size, player.x));
+      player.y = Math.max(player.size, Math.min(WORLD_HEIGHT - player.size, player.y));
+
+      camera.x = player.x - canvas.width / 2;
+      camera.y = player.y - canvas.height / 2;
+
+      fragments.forEach(f => {
+        if (!f.collected) {
+          f.pulse += dt * 3;
+        }
+      });
+    }
+
+    function render() {
+      if (!ctx || !canvas) return;
+
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, '#050510');
+      gradient.addColorStop(0.5, '#0f0510');
+      gradient.addColorStop(1, '#050f10');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(-camera.x, -camera.y);
+
+      ctx.fillStyle = '#2a5a9e';
+      ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+      
+      ctx.fillStyle = '#1a4a2a';
+      ctx.strokeStyle = '#2d5a3d';
+      ctx.lineWidth = 5;
+      
+      ctx.beginPath();
+      ctx.moveTo(650, 80);
+      ctx.lineTo(720, 70);
+      ctx.lineTo(780, 90);
+      ctx.lineTo(820, 130);
+      ctx.lineTo(840, 180);
+      ctx.lineTo(860, 240);
+      ctx.lineTo(900, 300);
+      ctx.lineTo(920, 370);
+      ctx.lineTo(930, 440);
+      ctx.lineTo(920, 500);
+      ctx.lineTo(880, 560);
+      ctx.lineTo(840, 610);
+      ctx.lineTo(780, 650);
+      ctx.lineTo(720, 670);
+      ctx.lineTo(660, 680);
+      ctx.lineTo(620, 650);
+      ctx.lineTo(600, 590);
+      ctx.lineTo(550, 560);
+      ctx.lineTo(490, 550);
+      ctx.lineTo(420, 570);
+      ctx.lineTo(360, 580);
+      ctx.lineTo(310, 570);
+      ctx.lineTo(280, 540);
+      ctx.lineTo(260, 480);
+      ctx.lineTo(250, 420);
+      ctx.lineTo(260, 360);
+      ctx.lineTo(300, 310);
+      ctx.lineTo(350, 280);
+      ctx.lineTo(420, 250);
+      ctx.lineTo(480, 230);
+      ctx.lineTo(540, 220);
+      ctx.lineTo(380, 200);
+      ctx.lineTo(350, 170);
+      ctx.lineTo(360, 140);
+      ctx.lineTo(400, 120);
+      ctx.lineTo(450, 130);
+      ctx.lineTo(520, 150);
+      ctx.lineTo(580, 120);
+      ctx.lineTo(630, 90);
+      ctx.lineTo(650, 80);
+      ctx.closePath();
+      
+      ctx.fill();
+      ctx.stroke();
+      
+      const cities = [
+        { name: 'Praha', x: 620, y: 320, icon: '🏰' },
+        { name: 'Paříž', x: 380, y: 300, icon: '🗼' },
+        { name: 'Stockholm', x: 800, y: 180, icon: '❄️' },
+        { name: 'Amsterdam', x: 480, y: 240, icon: '🌷' },
+        { name: 'Madrid', x: 300, y: 530, icon: '☀️' },
+        { name: 'Oslo', x: 750, y: 150, icon: '⛷️' },
+        { name: 'Řím', x: 580, y: 600, icon: '🏛️' },
+        { name: 'Londýn', x: 360, y: 220, icon: '🎩' },
+        { name: 'Berlín', x: 550, y: 270, icon: '🧱' },
+        { name: 'Vídeň', x: 630, y: 360, icon: '🎻' },
+        { name: 'Lisabon', x: 220, y: 520, icon: '⛵' },
+        { name: 'Barcelona', x: 360, y: 560, icon: '🏖️' },
+        { name: 'Atény', x: 750, y: 650, icon: '🏺' },
+        { name: 'Budapešť', x: 700, y: 390, icon: '🌉' },
+        { name: 'Štrasburk', x: 440, y: 310, icon: '🇪🇺' }
+      ];
+      
+      cities.forEach(city => {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.beginPath();
+        ctx.arc(city.x, city.y, 20, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.strokeStyle = 'rgba(50, 50, 50, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(city.x, city.y, 20, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(city.icon, city.x, city.y);
+      });
+
+      drawFragments();
+      drawPlayer();
+
+      ctx.restore();
+
+      drawInteractionPrompt();
+    }
+
+    function drawFragments() {
+      fragments.forEach(fragment => {
+        if (fragment.collected) return;
+
+        const colors = {
+          elite: '#ffd700',
+          denier: '#ff4444',
+          scientist: '#0088ff',
+          activist: '#88ff00'
+        };
+
+        const pulseScale = 1 + Math.sin(fragment.pulse) * 0.2;
+        const size = 35 * pulseScale;
+
+        ctx.fillStyle = colors[fragment.type];
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = colors[fragment.type];
+
+        ctx.beginPath();
+        ctx.arc(fragment.x, fragment.y, size * 0.9, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.font = `${size * 1.4}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('📜', fragment.x, fragment.y);
+
+        const dist = Math.sqrt((fragment.x - player.x) ** 2 + (fragment.y - player.y) ** 2);
+        if (dist < 180) {
+          ctx.fillStyle = colors[fragment.type];
+          ctx.font = `bold 16px "Courier New"`;
+          ctx.fillText(fragment.location, fragment.x, fragment.y - 55);
+          
+          if (dist < 60) {
+            ctx.fillStyle = '#00ff88';
+            ctx.font = `bold 14px "Courier New"`;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#00ff88';
+            ctx.fillText('[E] Sebrat fragment', fragment.x, fragment.y + 55);
+            ctx.shadowBlur = 0;
+          }
+        }
+      });
+    }
+
+    function drawPlayer() {
+      ctx.fillStyle = '#00ff88';
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = '#00ff88';
+      
+      ctx.beginPath();
+      ctx.moveTo(player.x, player.y - player.size);
+      ctx.lineTo(player.x - player.size * 0.7, player.y + player.size * 0.6);
+      ctx.lineTo(player.x, player.y + player.size * 0.3);
+      ctx.lineTo(player.x + player.size * 0.7, player.y + player.size * 0.6);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+
+      ctx.strokeStyle = 'rgba(0, 255, 136, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, 50, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    function drawInteractionPrompt() {
+      const nearest = getNearestFragment();
+      if (nearest && nearest.distance < 60 && !nearest.collected) {
+        const text = `📍 ${nearest.location} - Stiskni [E]`;
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        ctx.fillRect(canvas.width / 2 - 220, 100, 440, 60);
+        
+        ctx.strokeStyle = '#00ff88';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(canvas.width / 2 - 220, 100, 440, 60);
+        
+        ctx.fillStyle = '#00ff88';
+        ctx.font = 'bold 18px "Courier New"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, canvas.width / 2, 130);
+      }
+    }
+
+    function setupMobileControls() {
+      const dirButtons = document.querySelectorAll('.mobile-btn[data-dir]');
+      const actionBtn = document.getElementById('mobileAction');
+
+      // D-pad – pohyb ↕↔ (emulujeme stisk WASD/šipek přes objekt keys)
+      dirButtons.forEach(btn => {
+        const dir = btn.dataset.dir;
+
+        const start = (e) => {
+          e.preventDefault();
+          setDirKey(dir, true);
+        };
+
+        const end = (e) => {
+          e.preventDefault();
+          setDirKey(dir, false);
+        };
+
+        // touch
+        btn.addEventListener('touchstart', start);
+        btn.addEventListener('touchend', end);
+        btn.addEventListener('touchcancel', end);
+
+        // pro případ testování na PC myší
+        btn.addEventListener('mousedown', start);
+        btn.addEventListener('mouseup', end);
+        btn.addEventListener('mouseleave', end);
+      });
+
+      // Tlačítko E – sebrání fragmentu (stejná logika jako v handleKeyDown pro klávesu E)
+      if (actionBtn) {
+        const triggerAction = (e) => {
+          e.preventDefault();
+          if (gameState === 'playing') {
+            const nearestFragment = getNearestFragment();
+            if (nearestFragment && nearestFragment.distance < 60 && !nearestFragment.collected) {
+              showFragmentModal(nearestFragment);
+            }
+          }
+        };
+
+        actionBtn.addEventListener('click', triggerAction);
+        actionBtn.addEventListener('touchstart', triggerAction);
+      }
+    }
+
+    function setDirKey(dir, isDown) {
+      if (!keys) return;
+      if (dir === 'up') {
+        keys['w'] = isDown;
+        keys['arrowup'] = isDown;
+      }
+      if (dir === 'down') {
+        keys['s'] = isDown;
+        keys['arrowdown'] = isDown;
+      }
+      if (dir === 'left') {
+        keys['a'] = isDown;
+        keys['arrowleft'] = isDown;
+      }
+      if (dir === 'right') {
+        keys['d'] = isDown;
+        keys['arrowright'] = isDown;
+      }
+    }
+
+    let lastTime = performance.now();
+    function gameLoop() {
+      const currentTime = performance.now();
+      const dt = Math.min((currentTime - lastTime) / 1000, 0.1);
+      lastTime = currentTime;
+
+      update(dt);
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function start() {
+      init();
+    }
+
+    start();
+  </script>
+  <script>
+    (function(){
+      function c(){
+        var b=a.contentDocument||a.contentWindow.document;
+        if(b){
+          var d=b.createElement('script');
+          d.innerHTML="window.__CF$cv$params={r:'9a6a184107961033',t:'MTc2NDUwMzA4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+          b.getElementsByTagName('head')[0].appendChild(d)
+        }
+      }
+      if(document.body){
+        var a=document.createElement('iframe');
+        a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);
+        if('loading'!==document.readyState)c();
+        else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);
+        else{
+          var e=document.onreadystatechange||function(){};
+          document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}
+        }
+      }
+    })();
+  </script>
+ </body>
+</html>
